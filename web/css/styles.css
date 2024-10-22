@@ -1,0 +1,457 @@
+/* styles.css */
+
+body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    /* background: url('../images/background.jpg') no-repeat center center fixed; */
+    background-size: cover;
+}
+
+nav {
+    display: none;
+}
+
+nav ul.menu {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+nav ul.menu li {
+    position: relative;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.action-buttons .btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+nav ul.menu li a {
+    display: block;
+    color: #ffffff;
+    text-align: center;
+    padding: 16px 20px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+nav ul.menu li a:hover {
+    background-color: #495057;
+}
+
+nav ul.menu li:hover > ul.dropdown {
+    display: block;
+}
+
+nav ul.menu ul.dropdown {
+    display: none;
+    position: absolute;
+    background-color: #343a40;
+    min-width: 160px;
+    z-index: 1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+nav ul.menu ul.dropdown li {
+    float: none;
+}
+
+nav ul.menu ul.dropdown li a {
+    padding: 12px 16px;
+}
+
+iframe {
+    width: 100%;
+    height: 100vh;
+    border: none;
+}
+
+.form-body {
+    align-items: center;        
+    justify-content: center;   
+    min-height: 100vh;         
+    margin: 0 35%;                 
+}
+
+/* Стили для форм */
+.form-container {
+    background-color: rgba(255, 255, 255, 0.9);
+    max-width: 400px;
+    margin: 20px;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.form-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #343a40;
+    font-weight: 700;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    color: #495057;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 5px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    border-color: #80bdff;
+    outline: none;
+}
+
+.btn {
+    width: 100%;
+    padding: 14px;
+    background-color: #007bff;
+    color: #ffffff;
+    font-size: 18px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-weight: 500;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
+/* Стили для модальных окон */
+
+.modal {
+    display: none; /* Скрыто по умолчанию */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный фон */
+}
+
+.modal-content {
+    background-color: #ffffff;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 500px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.close-button {
+    color: #aaaaaa;
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #000000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Стили для таблиц */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+table thead {
+    background-color: #343a40;
+    color: #000000;
+}
+
+table th,
+table td {
+    padding: 12px 15px;
+    border: 1px solid #dee2e6;
+    text-align: left;
+}
+
+table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+table tbody tr:hover {
+    background-color: #e9ecef;
+}
+
+/* Стили для уведомлений */
+
+#notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    min-width: 250px;
+    padding: 15px;
+    background-color: #28a745; /* Зеленый цвет для успеха */
+    color: #ffffff;
+    border-radius: 4px;
+    display: none;
+    z-index: 1001;
+}
+
+#notification.error {
+    background-color: #dc3545; /* Красный цвет для ошибок */
+}
+
+#notification.show {
+    display: block;
+}
+
+/* Адаптивность для мобильных устройств */
+
+@media (max-width: 768px) {
+    nav ul.menu {
+        flex-direction: column;
+    }
+
+    nav ul.menu li {
+        width: 100%;
+    }
+
+    nav ul.menu li a {
+        text-align: left;
+        padding-left: 20px;
+    }
+
+    .form-container {
+        margin: 20px;
+        width: calc(100% - 40px);
+    }
+
+    table {
+        display: block;
+        overflow-x: auto;
+    }
+}
+
+#app-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+.form-footer {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.form-footer a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.form-footer a:hover {
+    text-decoration: underline;
+}
+/* styles.css */
+
+/* Общие стили */
+body, html, #app {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+#app {
+    display: flex;
+}
+
+/* Стили бокового меню */
+.sidebar {
+    width: 250px;
+    background-color: #343a40;
+    color: #ffffff;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.sidebar .sidebar-header {
+    padding: 20px;
+    background-color: #23272b;
+    text-align: center;
+}
+
+.sidebar .nav-link {
+    color: #ffffff;
+    padding: 15px 20px;
+}
+
+.sidebar .nav-link:hover {
+    background-color: #495057;
+}
+
+.sidebar .nav-link.active {
+    background-color: #495057;
+}
+
+.sidebar .nav-link i {
+    margin-right: 10px;
+}
+
+#main-content {
+    margin-left: 250px;
+    width: calc(100% - 250px);
+}
+
+#main-content iframe {
+    width: 100%;
+    height: 100vh;
+    border: none;
+}
+
+/* Стили уведомлений */
+#notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    min-width: 250px;
+    padding: 15px;
+    background-color: #28a745; /* Зеленый цвет для успеха */
+    color: #ffffff;
+    border-radius: 4px;
+    display: none;
+    z-index: 1001;
+}
+
+#notification.error {
+    background-color: #dc3545; /* Красный цвет для ошибок */
+}
+
+#notification.show {
+    display: block;
+}
+
+/* Стили для таблиц */
+table {
+    width: 100%;
+    margin: 20px 0;
+}
+
+table thead {
+    background-color: #f8f9fa;
+}
+
+table th,
+table td {
+    padding: 12px 15px;
+    text-align: left;
+}
+
+table tbody tr:hover {
+    background-color: #e9ecef;
+}
+
+/* Стили формы поиска */
+.search-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+.search-container input {
+    width: 300px;
+    margin-right: 10px;
+}
+
+.search-container button {
+    margin-right: 10px;
+}
+
+/* Стили профиля пользователя */
+.profile-container {
+    max-width: 800px;
+    margin: 20px auto;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.profile-header img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 30px;
+}
+
+.profile-header .profile-info {
+    flex-grow: 1;
+}
+
+.profile-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 30px;
+}
+
+.profile-stats .stat {
+    text-align: center;
+}
+
+.profile-stats .stat h3 {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 200px;
+    }
+
+    #main-content {
+        margin-left: 200px;
+        width: calc(100% - 200px);
+    }
+
+    .search-container input {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}

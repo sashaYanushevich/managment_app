@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Servers</title>
+    <!-- Bootstrap and styles -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h2 class="mt-4">My Servers</h2>
+        <button id="add-server" class="btn btn-success mb-3">Add Server</button>
+        <table id="servers-table" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Package</th>
+                    <th>Max Modems</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <!-- Modal for adding/editing server -->
+        <div id="server-modal" class="modal fade" tabindex="-1" aria-labelledby="serverModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form id="server-form">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="serverModalLabel">Add Server</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" id="server-id">
+                            <div class="mb-3">
+                                <label for="server-name" class="form-label">Name</label>
+                                <input type="text" class="form-control" id="server-name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="package-select" class="form-label">Package</label>
+                                <select class="form-select" id="package-select" required>
+                                    <!-- Options will be added dynamically -->
+                                </select>
+                                <div id="package-info" class="mt-2">
+                                    <!-- Selected package information -->
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="server-max-modems" class="form-label">Max Modems</label>
+                                <input type="number" class="form-control" id="server-max-modems" required>
+                            </div>
+                            <h5>Machine Parameters</h5>
+                            <div class="mb-3">
+                                <label for="n_cpu" class="form-label">Number of CPUs (0-64)</label>
+                                <input type="number" class="form-control" id="n_cpu" min="0" max="64" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="rootfs" class="form-label">rootfs</label>
+                                <input type="number" class="form-control" id="rootfs" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="mem" class="form-label">mem</label>
+                                <input type="number" class="form-control" id="mem" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="bios_uuid" class="form-label">bios_uuid</label>
+                                <input type="text" class="form-control" id="bios_uuid" readonly>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS Bundle with Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Font Awesome JS (if needed) -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <!-- Your script -->
+    <script src="../js/servers.js"></script>
+</body>
+</html>

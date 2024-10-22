@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Management Application</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <!-- Application container -->
+    <div id="app">
+        <!-- Sidebar -->
+        <div id="sidebar" class="sidebar">
+            <!-- Sidebar content will be dynamically added -->
+        </div>
+        <!-- Main content -->
+        <div id="main-content">
+            <iframe name="content-frame" src="/static/pages/login.html"></iframe>
+        </div>
+    </div>
+
+    <!-- Notification block -->
+    <div id="notification"></div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom scripts -->
+    <script src="/static/js/main.js"></script>
+    <!-- Notification function -->
+    <script>
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = isError ? 'error show' : 'show';
+
+            setTimeout(() => {
+                notification.className = notification.className.replace('show', '');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

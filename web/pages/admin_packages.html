@@ -1,0 +1,65 @@
+<!-- admin_packages.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel - Packages</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <h2>Packages</h2>
+    <button id="add-package" class="btn"><i class="fas fa-plus"></i> Add Package</button>
+    <table id="packages-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>User ID</th>
+                <th>Comment</th>
+                <th>Max Modems</th>
+                <th>Free Modems</th>
+                <th>Start Date</th>
+                <th>Expiry Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Packages will be loaded dynamically -->
+        </tbody>
+    </table>
+
+    <!-- Modal for adding/editing package -->
+    <div id="package-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 id="modal-title">Add Package</h2>
+            <form id="package-form">
+                <input type="hidden" id="package-id" name="package-id">
+                <div class="form-group">
+                    <label for="customer_id">User:</label>
+                    <select id="customer_id" name="customer_id" required>
+                        <!-- User options will be loaded dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="comment">Comment:</label>
+                    <input type="text" id="comment" name="comment">
+                </div>
+                <div class="form-group">
+                    <label for="max_modems">Max Modems:</label>
+                    <input type="number" id="max_modems" name="max_modems" required>
+                </div>
+                <div class="form-group">
+                    <label for="expiry">Expiry Date:</label>
+                    <input type="date" id="expiry" name="expiry" required>
+                </div>
+                <button type="submit" class="btn">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/static/js/admin_packages.js"></script>
+</body>
+</html>
