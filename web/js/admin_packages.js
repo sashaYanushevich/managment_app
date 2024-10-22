@@ -18,7 +18,7 @@ $(document).ready(function () {
     // Function to load users for the dropdown
     function loadUsers() {
         $.ajax({
-            url: 'http://127.0.0.1:8000/api/v1/users/',
+            url: 'http://188.124.59.90:8000/api/v1/users/',
             headers: {
                 'Authorization': 'Bearer ' + token
             },
@@ -40,7 +40,7 @@ $(document).ready(function () {
     // Function to load packages
     function loadPackages() {
         $.ajax({
-            url: 'http://127.0.0.1:8000/api/v1/packages/',
+            url: 'http://188.124.59.90:8000/api/v1/packages/',
             headers: {
                 'Authorization': 'Bearer ' + token
             },
@@ -88,7 +88,7 @@ $(document).ready(function () {
         if (packageId) {
             // Edit existing package
             modalTitle.text('Edit Package');
-            fetch(`http://127.0.0.1:8000/api/v1/packages/${packageId}`, {
+            fetch(`http://188.124.59.90:8000/api/v1/packages/${packageId}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': 'Bearer ' + token,
@@ -119,7 +119,7 @@ $(document).ready(function () {
 
     // Function to delete a package
     function deletePackage(packageId) {
-        fetch(`http://127.0.0.1:8000/api/v1/packages/${packageId}`, {
+        fetch(`http://188.124.59.90:8000/api/v1/packages/${packageId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': 'Bearer ' + token
@@ -147,7 +147,7 @@ $(document).ready(function () {
         };
 
         const method = packageId ? 'PUT' : 'POST';
-        const url = packageId ? `http://127.0.0.1:8000/api/v1/packages/${packageId}` : 'http://127.0.0.1:8000/api/v1/packages/';
+        const url = packageId ? `http://188.124.59.90:8000/api/v1/packages/${packageId}` : 'http://188.124.59.90:8000/api/v1/packages/';
 
         fetch(url, {
             method: method,

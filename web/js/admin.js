@@ -15,7 +15,7 @@ $(document).ready(function () {
     // Функция для загрузки пользователей
     function loadUsers(query = '') {
         $.ajax({
-            url: 'http://127.0.0.1:8000/api/v1/users/',
+            url: 'http://188.124.59.90:8000/api/v1/users/',
             headers: {
                 'Authorization': 'Bearer ' + token
             },
@@ -70,7 +70,7 @@ $(document).ready(function () {
         if (userId) {
             // Редактирование пользователя
             modalTitle.text('Редактировать пользователя');
-            fetch(`http://127.0.0.1:8000/api/v1/users/get?id=${userId}`, {
+            fetch(`http://188.124.59.90:8000/api/v1/users/get?id=${userId}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': 'Bearer ' + token,
@@ -103,7 +103,7 @@ $(document).ready(function () {
 
     // Функция для удаления пользователя
     function deleteUser(userId) {
-        fetch(`http://127.0.0.1:8000/api/v1/users/${userId}`, {
+        fetch(`http://188.124.59.90:8000/api/v1/users/${userId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': 'Bearer ' + token
@@ -135,7 +135,7 @@ $(document).ready(function () {
         }
     
         const method = userId ? 'PUT' : 'POST';
-        const url = userId ? `http://127.0.0.1:8000/api/v1/users/${userId}` : 'http://127.0.0.1:8000/api/v1/users/';
+        const url = userId ? `http://188.124.59.90:8000/api/v1/users/${userId}` : 'http://188.124.59.90:8000/api/v1/users/';
     
         console.log('Метод запроса:', method);
         console.log('URL запроса:', url);

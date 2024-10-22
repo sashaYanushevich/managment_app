@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data.append('username', loginForm.login.value);
             data.append('password', loginForm.password.value);
 
-            fetch('http://127.0.0.1:8000/api/v1/auth/login/access-token', {
+            fetch('http://188.124.59.90:8000/api/v1/auth/login/access-token', {
                 method: 'POST',
                 body: data
             })
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 password: registerForm.password.value
             };
 
-            fetch('http://127.0.0.1:8000/api/v1/users/', {
+            fetch('http://188.124.59.90:8000/api/v1/users/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const email = prompt("Введите ваш email для восстановления пароля:");
             if (email) {
-                fetch(`http://127.0.0.1:8000/api/v1/users/password-recovery/${email}`, {
+                fetch(`http://188.124.59.90:8000/api/v1/users/password-recovery/${email}`, {
                     method: 'POST'
                 })
                 .then(response => response.json())
