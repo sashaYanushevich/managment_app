@@ -3,7 +3,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     if (!token) {
-        alert('Необходима авторизация');
+        alert('Authentication required');
         parent.location.reload();
     }
 
@@ -18,8 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(response => response.json())
         .then(user => {
             userInfoDiv.innerHTML = `
-                <p><strong>Имя:</strong> ${user.name}</p>
-                <p><strong>Логин:</strong> ${user.login}</p>
+                <p><strong>Name:</strong> ${user.name}</p>
+                <p><strong>Login:</strong> ${user.login}</p>
                 <p><strong>Email:</strong> ${user.email}</p>
             `;
         });

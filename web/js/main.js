@@ -32,38 +32,38 @@ $(document).ready(function () {
             </div>
             <ul class="nav flex-column">
                 <li class="nav-item">
-                    <a href="/static/pages/user_profile.html" class="nav-link" target="content-frame"><i class="fas fa-user"></i> Профиль</a>
+                    <a href="/static/pages/user_profile.html" class="nav-link" target="content-frame"><i class="fas fa-user"></i> Profile</a>
                 </li>
         `);
 
         if (user.is_admin) {
             sidebar.append(`
                 <li class="nav-item">
-                    <a href="#adminSubmenu" data-bs-toggle="collapse" class="nav-link"><i class="fas fa-user-shield"></i> Админ панель</a>
+                    <a href="#adminSubmenu" data-bs-toggle="collapse" class="nav-link"><i class="fas fa-user-shield"></i> Admin Panel</a>
                     <ul class="collapse list-unstyled" id="adminSubmenu">
                         <li>
-                            <a href="/static/pages/admin_dashboard.html" class="nav-link" target="content-frame"><i class="fas fa-users"></i> Пользователи</a>
+                            <a href="/static/pages/admin_dashboard.html" class="nav-link" target="content-frame"><i class="fas fa-users"></i> Users</a>
                         </li>
                         <li>
-                            <a href="/static/pages/admin_packages.html" class="nav-link" target="content-frame"><i class="fas fa-box"></i> Пакеты</a>
+                            <a href="/static/pages/admin_packages.html" class="nav-link" target="content-frame"><i class="fas fa-box"></i> Packages</a>
                         </li>
                     </ul>
-                    <a href="/static/pages/user_packages.html" class="nav-link" target="content-frame"><i class="fas fa-box-open"></i> Мои пакеты</a>
-                    <a href="/static/pages/servers.html" class="nav-link" target="content-frame"><i class="fas fa-box-open"></i> Мои сервера</a>
+                    <a href="/static/pages/user_packages.html" class="nav-link" target="content-frame"><i class="fas fa-box-open"></i> My Packages</a>
+                    <a href="/static/pages/servers.html" class="nav-link" target="content-frame"><i class="fas fa-box-open"></i> My Servers</a>
                 </li>
             `);
         } else {
             sidebar.append(`
                 <li class="nav-item">
-                    <a href="/static/pages/user_packages.html" class="nav-link" target="content-frame"><i class="fas fa-box-open"></i> Мои пакеты</a>
-                    <a href="/static/pages/servers.html" class="nav-link" target="content-frame"><i class="fas fa-box-open"></i> Мои сервера</a>
+                    <a href="/static/pages/user_packages.html" class="nav-link" target="content-frame"><i class="fas fa-box-open"></i> My Packages</a>
+                    <a href="/static/pages/servers.html" class="nav-link" target="content-frame"><i class="fas fa-box-open"></i> My Servers</a>
                 </li>
             `);
         }
 
         sidebar.append(`
                 <li class="nav-item">
-                    <a href="#" id="logout" class="nav-link"><i class="fas fa-sign-out-alt"></i> Выйти</a>
+                    <a href="#" id="logout" class="nav-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </li>
             </ul>
         `);

@@ -19,9 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(result => {
                 if (result.access_token) {
                     localStorage.setItem('token', result.access_token);
-                    parent.location.href = '/static/index.html'; // Перенаправляем после входа
+                    parent.location.href = '/static/index.html'; // Redirect after login
                 } else {
-                    alert('Неверный логин или пароль');
+                    alert('Invalid login or password');
                 }
             });
         });
@@ -48,10 +48,10 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(response => response.json())
             .then(result => {
                 if (result.id) {
-                    alert('Регистрация успешна. Теперь вы можете войти.');
-                    parent.location.href = '/static/pages/login.html'; // Перенаправляем на страницу входа
+                    alert('Registration successful. You can now log in.');
+                    parent.location.href = '/static/pages/login.html'; // Redirect to login page
                 } else {
-                    alert('Ошибка при регистрации', true);
+                    alert('Error during registration', true);
                 }
             });
         });
@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (forgotPasswordLink) {
         forgotPasswordLink.addEventListener('click', (e) => {
             e.preventDefault();
-            const email = prompt("Введите ваш email для восстановления пароля:");
+            const email = prompt("Enter your email for password recovery:");
             if (email) {
                 fetch(`http://188.124.59.90:8000/api/v1/users/password-recovery/${email}`, {
                     method: 'POST'
@@ -70,12 +70,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (result.msg) {
                         alert(result.msg);
                     } else {
-                        alert('Произошла ошибка при отправке инструкций по восстановлению пароля.');
+                        alert('An error occurred while sending password recovery instructions.');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Произошла ошибка при отправке запроса на восстановление пароля.');
+                    alert('An error occurred while sending a password recovery request.');
                 });
             }
         });

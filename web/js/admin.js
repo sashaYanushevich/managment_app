@@ -1,7 +1,7 @@
 $(document).ready(function () {
     const token = localStorage.getItem('token');
     if (!token) {
-        alert('Необходима авторизация');
+        alert('Authentication required');
         parent.location.href = '../pages/login.html';
     }
 
@@ -68,8 +68,8 @@ $(document).ready(function () {
 
     function openUserModal(userId = null) {
         if (userId) {
-            // Редактирование пользователя
-            modalTitle.text('Редактировать пользователя');
+            // Edit user
+            modalTitle.text('Edit User');
             fetch(`http://188.124.59.90:8000/api/v1/users/get?id=${userId}`, {
                 method: 'GET',
                 headers: {
@@ -87,11 +87,11 @@ $(document).ready(function () {
                 userForm.find('[name="password"]').val(''); // Очищаем поле пароля
             });
         } else {
-            // Добавление нового пользователя
-            modalTitle.text('Добавить пользователя');
+            // Add new user
+            modalTitle.text('Add User');
             userForm.trigger('reset');
             userForm.find('[name="user-id"]').val('');
-            userForm.find('[name="is_active"]').prop('checked', true); // Устанавливаем статус по умолчанию
+            userForm.find('[name="is_active"]').prop('checked', true); // Set default status
         }
         userModal.css('display', 'block');
     }
@@ -101,7 +101,7 @@ $(document).ready(function () {
         userModal.css('display', 'none');
     }
 
-    // Функция для удаления пользователя
+    // Function to delete a user
     function deleteUser(userId) {
         fetch(`http://188.124.59.90:8000/api/v1/users/${userId}`, {
             method: 'DELETE',
@@ -110,12 +110,12 @@ $(document).ready(function () {
             }
         })
         .then(() => {
-            alert('Пользователь удален');
+            alert('User deleted');
             loadUsers();
         })
         .catch(error => {
-            console.error('Ошибка при удалении пользователя:', error);
-            alert('Ошибка при удалении пользователя');
+            console.error('Error deleting user:', error);
+            alert('Error deleting user');
         });
     }
 
@@ -151,16 +151,16 @@ $(document).ready(function () {
         .then(response => {
             if (response.ok) {
                 closeUserModal();
-                alert('Данные пользователя сохранены');
+                alert('User data saved');
                 loadUsers();
             } else {
                 return response.json().then(errorData => {
-                    throw new Error(errorData.detail || 'Ошибка при сохранении данных');
+                    throw new Error(errorData.detail || 'Error saving data');
                 });
             }
         })
         .catch(error => {
-            console.error('Ошибка при сохранении пользователя:', error);
+            console.error('Error saving user:', error);
             alert(error.message);
         });
     });

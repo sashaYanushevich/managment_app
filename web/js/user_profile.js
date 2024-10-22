@@ -3,7 +3,7 @@
 $(document).ready(function () {
     const token = localStorage.getItem('token');
     if (!token) {
-        alert('Необходима авторизация');
+        alert('Authentication required');
         parent.location.href = 'static/pages/login.html';
     }
 
@@ -62,11 +62,11 @@ $(document).ready(function () {
 
     // Обработчик кнопки "Редактировать профиль"
     $('#edit-profile').on('click', function () {
-        // Заполняем форму текущими данными
+        // Fill the form with current data
         $('#profile-name').val(currentUser.name || '');
         $('#profile-email').val(currentUser.email || '');
 
-        // Открываем модальное окно
+        // Open the modal window
         profileModal.show();
     });
 
@@ -94,13 +94,13 @@ $(document).ready(function () {
             },
             data: JSON.stringify(data),
             success: function () {
-                alert('Профиль обновлен');
+                alert('Profile updated');
                 profileModal.hide();
                 location.reload();
             },
             error: function (xhr, status, error) {
-                console.error('Ошибка при обновлении профиля:', error);
-                alert('Ошибка при обновлении профиля');
+                console.error('Error updating profile:', error);
+                alert('Error updating profile');
             }
         });
     });
