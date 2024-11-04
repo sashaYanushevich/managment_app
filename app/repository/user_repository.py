@@ -48,6 +48,7 @@ class CRUDUser:
             hashed_password = get_password_hash(update_data["password"])
             update_data["hashed_password"] = hashed_password
             del update_data["password"]
+        print(update_data)
         for field in update_data:
             setattr(db_obj, field, update_data[field])
         db.add(db_obj)

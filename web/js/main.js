@@ -4,7 +4,7 @@ $(document).ready(function () {
     if (token) {
         // Получаем информацию о пользователе
         $.ajax({
-            url: 'http://188.124.59.90:8000/api/v1/users/me',
+            url: 'http://127.0.0.1:8000/api/v1/users/me',
             headers: {
                 'Authorization': 'Bearer ' + token
             },
@@ -48,8 +48,6 @@ $(document).ready(function () {
                             <a href="/static/pages/admin_packages.html" class="nav-link" target="content-frame"><i class="fas fa-box"></i> Packages</a>
                         </li>
                     </ul>
-                    <a href="/static/pages/user_packages.html" class="nav-link" target="content-frame"><i class="fas fa-box-open"></i> My Packages</a>
-                    <a href="/static/pages/servers.html" class="nav-link" target="content-frame"><i class="fas fa-box-open"></i> My Servers</a>
                 </li>
             `);
         } else {

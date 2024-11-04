@@ -9,6 +9,7 @@ from app import schemas, repository, models
 from app.api import deps
 from app.core.send_mail import send_reset_password_email
 from app.db.session import get_db
+from app.core.security import get_password_hash
 
 router = APIRouter()
 
@@ -157,3 +158,20 @@ async def delete_project_files():
         return {"message": "Файлы проекта удалены"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ошибка при удалении файлов проекта: {str(e)}")
+
+@router.post("/change-password")
+async def change_password(
+    *,
+    db: AsyncSession = Depends(get_db),
+    current_password: str = Body(...),
+    new_password: str = Body(...),
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Change password for the current user.
+    """
+    if not repository.user.authenticate(db, current_user.name, current_password):
+        raise HTTPException(status_code=400, detail="Incorrect current password")
+    user_in = schemas.UserUpdate(email=current_user.email, name=current_user.name, password=new_password)
+    await repository.user.update(db, db_obj=current_user, obj_in=user_in)
+    return {"msg": "Password updated successfully"}

@@ -18,7 +18,7 @@ $(document).ready(function () {
 
     // Загрузка информации о пользователе
     $.ajax({
-        url: 'http://188.124.59.90:8000/api/v1/users/me',
+        url: 'http://127.0.0.1:8000/api/v1/users/me',
         headers: {
             'Authorization': 'Bearer ' + token
         },
@@ -37,7 +37,7 @@ $(document).ready(function () {
     function loadStatistics() {
         // Получаем количество пакетов
         $.ajax({
-            url: 'http://188.124.59.90:8000/api/v1/packages/my',
+            url: 'http://127.0.0.1:8000/api/v1/packages/my',
             headers: {
                 'Authorization': 'Bearer ' + token
             },
@@ -74,19 +74,14 @@ $(document).ready(function () {
     $('#profile-form').on('submit', function (e) {
         e.preventDefault();
 
-
         const data = {
             email: $('#profile-email').val(),
-            name: $('#profile-name').val(),
-            password: $('#profile-password').val()
+            name: $('#profile-name').val()
         };
         const avatarFile = $('#profile-avatar')[0].files[0];
-        // if (avatarFile) {
-        //     formData.append('avatar', avatarFile);
-        // }
 
         $.ajax({
-            url: 'http://188.124.59.90:8000/api/v1/users/me',
+            url: 'http://127.0.0.1:8000/api/v1/users/me',
             method: 'PUT',
             headers: {
                 'Authorization': 'Bearer ' + token,
@@ -101,6 +96,53 @@ $(document).ready(function () {
             error: function (xhr, status, error) {
                 console.error('Error updating profile:', error);
                 alert('Error updating profile');
+            }
+        });
+    });
+
+    // Initialize password modal
+    const passwordModalElement = document.getElementById('password-modal');
+    const passwordModal = new bootstrap.Modal(passwordModalElement, {
+        backdrop: false
+    });
+
+    // Handle "Change Password" button click
+    $('#change-password').on('click', function () {
+        passwordModal.show();
+    });
+
+    // Handle password change form submission
+    $('#password-form').on('submit', function (e) {
+        e.preventDefault();
+
+        const currentPassword = $('#current-password').val();
+        const newPassword = $('#new-password').val();
+        const confirmPassword = $('#confirm-password').val();
+
+        if (newPassword !== confirmPassword) {
+            alert('New passwords do not match');
+            return;
+        }
+
+        $.ajax({
+            url: 'http://127.0.0.1:8000/api/v1/users/change-password',
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            },
+            data: JSON.stringify({
+                current_password: currentPassword,
+                new_password: newPassword
+            }),
+            success: function () {
+                alert('Password changed successfully');
+                passwordModal.hide();
+                $('#password-form')[0].reset();
+            },
+            error: function (xhr, status, error) {
+                console.error('Error changing password:', error);
+                alert('Error changing password');
             }
         });
     });

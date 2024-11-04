@@ -54,22 +54,9 @@
                                 <label for="server-max-modems" class="form-label">Max Modems</label>
                                 <input type="number" class="form-control" id="server-max-modems" required>
                             </div>
-                            <h5>Machine Parameters</h5>
                             <div class="mb-3">
-                                <label for="n_cpu" class="form-label">Number of CPUs (0-64)</label>
-                                <input type="number" class="form-control" id="n_cpu" min="0" max="64" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="rootfs" class="form-label">rootfs</label>
-                                <input type="number" class="form-control" id="rootfs" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="mem" class="form-label">mem</label>
-                                <input type="number" class="form-control" id="mem" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="bios_uuid" class="form-label">bios_uuid</label>
-                                <input type="text" class="form-control" id="bios_uuid" readonly>
+                                <label for="machine_data" class="form-label">Machine Parameters</label>
+                                <input type="text" class="form-control" id="machine_data" placeholder="Example: n_cpu=4,rootfs=119110,mem=7796,bios_uuid=4c4c4544-0054" required>
                             </div>
                         </div>
                         <div class="modal-footer">

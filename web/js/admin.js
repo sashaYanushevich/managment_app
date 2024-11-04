@@ -15,7 +15,7 @@ $(document).ready(function () {
     // Функция для загрузки пользователей
     function loadUsers(query = '') {
         $.ajax({
-            url: 'http://188.124.59.90:8000/api/v1/users/',
+            url: 'http://127.0.0.1:8000/api/v1/users/',
             headers: {
                 'Authorization': 'Bearer ' + token
             },
@@ -70,7 +70,7 @@ $(document).ready(function () {
         if (userId) {
             // Edit user
             modalTitle.text('Edit User');
-            fetch(`http://188.124.59.90:8000/api/v1/users/get?id=${userId}`, {
+            fetch(`http://127.0.0.1:8000/api/v1/users/get?id=${userId}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': 'Bearer ' + token,
@@ -80,21 +80,74 @@ $(document).ready(function () {
             .then(response => response.json())
             .then(user => {
                 userForm.find('[name="user-id"]').val(user.id);
-                userForm.find('[name="login"]').val(user.login);
+                userForm.find('[name="login"]').val(user.login); // Set login field for editing
                 userForm.find('[name="email"]').val(user.email || '');
                 userForm.find('[name="name"]').val(user.name || '');
-                userForm.find('[name="is_active"]').prop('checked', user.is_active);
-                userForm.find('[name="password"]').val(''); // Очищаем поле пароля
+                userForm.find('[name="status"]').val(user.is_active ? 'active' : 'inactive'); // Set status correctly
+                userForm.find('[name="password"]').val(''); // Clear password field
             });
         } else {
             // Add new user
             modalTitle.text('Add User');
             userForm.trigger('reset');
             userForm.find('[name="user-id"]').val('');
-            userForm.find('[name="is_active"]').prop('checked', true); // Set default status
+            userForm.find('[name="status"]').val('active'); // Set default status for new user
         }
         userModal.css('display', 'block');
     }
+    
+    // Handling form submission to ensure login is set only for new users
+    userForm.on('submit', function(e) {
+        e.preventDefault();
+    
+        const userId = userForm.find('[name="user-id"]').val();
+        const data = {
+            login: userForm.find('[name="login"]').val(),
+            email: userForm.find('[name="email"]').val(),
+            name: userForm.find('[name="name"]').val(),
+            is_active: userForm.find('[name="status"]').val() === 'active' // Correctly set status
+        };
+    
+        if (!userId) {
+            // Include login only when creating a new user
+            data.login = userForm.find('[name="login"]').val();
+        }
+    
+        if (userForm.find('[name="password"]').val()) {
+            data.password = userForm.find('[name="password"]').val();
+        }
+    
+        const method = userId ? 'PUT' : 'POST';
+        const url = userId ? `http://127.0.0.1:8000/api/v1/users/${userId}` : 'http://127.0.0.1:8000/api/v1/users/';
+    
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.detail || 'Error saving data');
+                });
+            }
+        })
+        .then(userData => {
+            closeUserModal();
+            alert('User data saved');
+            loadUsers();
+        })
+        .catch(error => {
+            console.error('Error saving user:', error);
+            alert(error.message);
+        });
+    });
+    
 
     // Функция для закрытия модального окна
     function closeUserModal() {
@@ -103,7 +156,7 @@ $(document).ready(function () {
 
     // Function to delete a user
     function deleteUser(userId) {
-        fetch(`http://188.124.59.90:8000/api/v1/users/${userId}`, {
+        fetch(`http://127.0.0.1:8000/api/v1/users/${userId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': 'Bearer ' + token
@@ -119,52 +172,6 @@ $(document).ready(function () {
         });
     }
 
-    userForm.on('submit', function(e) {
-        e.preventDefault();
-    
-        const userId = userForm.find('[name="user-id"]').val();
-        const data = {
-            login: userForm.find('[name="login"]').val(),
-            email: userForm.find('[name="email"]').val(),
-            name: userForm.find('[name="name"]').val(),
-            is_active: userForm.find('[name="is_active"]').is(':checked'),
-        };
-    
-        if (userForm.find('[name="password"]').val()) {
-            data.password = userForm.find('[name="password"]').val();
-        }
-    
-        const method = userId ? 'PUT' : 'POST';
-        const url = userId ? `http://188.124.59.90:8000/api/v1/users/${userId}` : 'http://188.124.59.90:8000/api/v1/users/';
-    
-        console.log('Метод запроса:', method);
-        console.log('URL запроса:', url);
-    
-        fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => {
-            if (response.ok) {
-                closeUserModal();
-                alert('User data saved');
-                loadUsers();
-            } else {
-                return response.json().then(errorData => {
-                    throw new Error(errorData.detail || 'Error saving data');
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error saving user:', error);
-            alert(error.message);
-        });
-    });
-    
     // Обработчики для открытия и закрытия модального окна
     addUserButton.on('click', function() {
         openUserModal();

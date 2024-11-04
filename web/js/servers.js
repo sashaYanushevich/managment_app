@@ -21,7 +21,7 @@ $(document).ready(function () {
     // Функция для загрузки пакетов
     function loadPackages() {
         return $.ajax({
-            url: 'http://188.124.59.90:8000/api/v1/packages/my',
+            url: 'http://127.0.0.1:8000/api/v1/packages/my',
             headers: {
                 'Authorization': 'Bearer ' + token
             },
@@ -49,7 +49,7 @@ $(document).ready(function () {
         if (selectedPackage) {
             // Получаем количество модемов, занятых серверами в этом пакете
             $.ajax({
-                url: 'http://188.124.59.90:8000/api/v1/servers/',
+                url: 'http://127.0.0.1:8000/api/v1/servers/',
                 headers: {
                     'Authorization': 'Bearer ' + token
                 },
@@ -88,7 +88,7 @@ $(document).ready(function () {
     // Функция для загрузки серверов
     function loadServers() {
         $.ajax({
-            url: 'http://188.124.59.90:8000/api/v1/servers/',
+            url: 'http://127.0.0.1:8000/api/v1/servers/',
             headers: {
                 'Authorization': 'Bearer ' + token
             },
@@ -133,10 +133,10 @@ $(document).ready(function () {
     // Функция для открытия модального окна
     function openServerModal(serverId = null) {
         if (serverId) {
-            // Редактирование сервера
-            modalTitle.text('Редактировать сервер');
+            // Edit server
+            modalTitle.text('Edit Server');
             $.ajax({
-                url: `http://188.124.59.90:8000/api/v1/servers/${serverId}`,
+                url: `http://127.0.0.1:8000/api/v1/servers/${serverId}`,
                 headers: {
                     'Authorization': 'Bearer ' + token
                 },
@@ -146,29 +146,26 @@ $(document).ready(function () {
                     $('#server-max-modems').val(server.max_modems);
                     $('#package-select').val(server.package_id);
                     updatePackageInfo();
-
-                    // Разбираем machine_data
-                    const machineDataParts = parseMachineData(server.machine_data);
-                    $('#n_cpu').val(machineDataParts.n_cpu);
-                    $('#rootfs').val(machineDataParts.rootfs);
-                    $('#mem').val(machineDataParts.mem);
-                    $('#bios_uuid').val(machineDataParts.bios_uuid);
-
+    
+                    // Set machine_data as a single string
+                    $('#machine_data').val(server.machine_data);
+    
                     serverModal.show();
                 },
                 error: function (xhr, status, error) {
-                    console.error('Ошибка при загрузке данных сервера:', error);
-                    alert('Ошибка при загрузке данных сервера');
+                    console.error('Error loading server data:', error);
+                    alert('Error loading server data');
                 }
             });
         } else {
-            // Добавление нового сервера
-            modalTitle.text('Добавить сервер');
+            // Add new server
+            modalTitle.text('Add Server');
             serverForm.trigger('reset');
             $('#server-id').val('');
-            // Генерируем новый bios_uuid
-            $('#bios_uuid').val(generateBiosUuid());
-            // Выбираем первый пакет по умолчанию и обновляем информацию
+            
+            // Set default machine_data format
+            $('#machine_data').val(`n_cpu=4,rootfs=119110,mem=7796,bios_uuid=${generateBiosUuid()}`);
+            
             $('#package-select').val(packageSelect.find('option:first').val());
             updatePackageInfo();
             serverModal.show();
@@ -180,73 +177,69 @@ $(document).ready(function () {
         updatePackageInfo();
     });
 
-    // Обработчик формы добавления/редактирования сервера
     serverForm.on('submit', function (e) {
-        e.preventDefault();
+    e.preventDefault();
 
-        const serverId = $('#server-id').val();
-        const packageId = parseInt($('#package-select').val());
-        const selectedPackage = packages.find(pkg => pkg.id === packageId);
+    const serverId = $('#server-id').val();
+    const packageId = parseInt($('#package-select').val());
+    const selectedPackage = packages.find(pkg => pkg.id === packageId);
 
-        const data = {
-            name: $('#server-name').val(),
-            max_modems: parseInt($('#server-max-modems').val()),
-            n_cpu: parseInt($('#n_cpu').val()),
-            rootfs: parseInt($('#rootfs').val()),
-            mem: parseInt($('#mem').val()),
-            bios_uuid: $('#bios_uuid').val(),
-            package_id: packageId
-        };
+    const data = {
+        name: $('#server-name').val(),
+        max_modems: parseInt($('#server-max-modems').val()),
+        machine_data: $('#machine_data').val(), // Use machine_data as a single string
+        package_id: packageId
+    };
 
-        // Проверяем, что новый сервер не превышает оставшиеся слоты
-        $.ajax({
-            url: 'http://188.124.59.90:8000/api/v1/servers/',
-            headers: {
-                'Authorization': 'Bearer ' + token
-            },
-            success: function (servers) {
-                const serversInPackage = servers.filter(srv => srv.package_id === packageId && srv.id !== parseInt(serverId));
-                const usedModems = serversInPackage.reduce((sum, srv) => sum + srv.max_modems, 0);
-                const remainingModems = selectedPackage.max_modems - usedModems;
+    // Check modem availability in the selected package
+    $.ajax({
+        url: 'http://127.0.0.1:8000/api/v1/servers/',
+        headers: {
+            'Authorization': 'Bearer ' + token
+        },
+        success: function (servers) {
+            const serversInPackage = servers.filter(srv => srv.package_id === packageId && srv.id !== parseInt(serverId));
+            const usedModems = serversInPackage.reduce((sum, srv) => sum + srv.max_modems, 0);
+            const remainingModems = selectedPackage.max_modems - usedModems;
 
-                if (data.max_modems > remainingModems) {
-                    alert('Превышено доступное количество модемов в выбранном пакете.');
-                    return;
-                }
-
-                const method = serverId ? 'PUT' : 'POST';
-                const url = serverId ? `http://188.124.59.90:8000/api/v1/servers/${serverId}` : 'http://188.124.59.90:8000/api/v1/servers/';
-
-                $.ajax({
-                    url: url,
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token
-                    },
-                    data: JSON.stringify(data),
-                    success: function () {
-                        serverModal.hide();
-                        alert('Сервер сохранен');
-                        loadServers();
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Ошибка при сохранении сервера:', error);
-                        alert(xhr.responseJSON.detail || 'Ошибка при сохранении сервера');
-                    }
-                });
-            },
-            error: function (xhr, status, error) {
-                console.error('Ошибка при проверке модемов:', error);
-                alert('Ошибка при проверке модемов');
+            if (data.max_modems > remainingModems) {
+                alert('Exceeded available modems in the selected package.');
+                return;
             }
+
+            const method = serverId ? 'PUT' : 'POST';
+            const url = serverId ? `http://127.0.0.1:8000/api/v1/servers/${serverId}` : 'http://127.0.0.1:8000/api/v1/servers/';
+
+            $.ajax({
+                url: url,
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                data: JSON.stringify(data),
+                success: function () {
+                    serverModal.hide();
+                    alert('Server saved');
+                    loadServers();
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error saving server:', error);
+                    alert(xhr.responseJSON.detail || 'Error saving server');
+                }
+            });
+        },
+        error: function (xhr, status, error) {
+            console.error('Error checking modems:', error);
+            alert('Error checking modems');
+        }
         });
     });
 
     // Функция для удаления сервера
     function deleteServer(serverId) {
         $.ajax({
-            url: `http://188.124.59.90:8000/api/v1/servers/${serverId}`,
+            url: `http://127.0.0.1:8000/api/v1/servers/${serverId}`,
             method: 'DELETE',
             headers: {
                 'Authorization': 'Bearer ' + token
