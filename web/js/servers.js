@@ -21,7 +21,7 @@ $(document).ready(function () {
     // Функция для загрузки пакетов
     function loadPackages() {
         return $.ajax({
-            url: 'http://127.0.0.1:8000/api/v1/packages/my',
+            url: 'http://188.124.59.90:8000/api/v1/packages/my',
             headers: {
                 'Authorization': 'Bearer ' + token
             },
@@ -49,7 +49,7 @@ $(document).ready(function () {
         if (selectedPackage) {
             // Получаем количество модемов, занятых серверами в этом пакете
             $.ajax({
-                url: 'http://127.0.0.1:8000/api/v1/servers/',
+                url: 'http://188.124.59.90:8000/api/v1/servers/',
                 headers: {
                     'Authorization': 'Bearer ' + token
                 },
@@ -88,7 +88,7 @@ $(document).ready(function () {
     // Функция для загрузки серверов
     function loadServers() {
         $.ajax({
-            url: 'http://127.0.0.1:8000/api/v1/servers/',
+            url: 'http://188.124.59.90:8000/api/v1/servers/',
             headers: {
                 'Authorization': 'Bearer ' + token
             },
@@ -136,7 +136,7 @@ $(document).ready(function () {
             // Edit server
             modalTitle.text('Edit Server');
             $.ajax({
-                url: `http://127.0.0.1:8000/api/v1/servers/${serverId}`,
+                url: `http://188.124.59.90:8000/api/v1/servers/${serverId}`,
                 headers: {
                     'Authorization': 'Bearer ' + token
                 },
@@ -193,7 +193,7 @@ $(document).ready(function () {
 
     // Check modem availability in the selected package
     $.ajax({
-        url: 'http://127.0.0.1:8000/api/v1/servers/',
+        url: 'http://188.124.59.90:8000/api/v1/servers/',
         headers: {
             'Authorization': 'Bearer ' + token
         },
@@ -208,7 +208,7 @@ $(document).ready(function () {
             }
 
             const method = serverId ? 'PUT' : 'POST';
-            const url = serverId ? `http://127.0.0.1:8000/api/v1/servers/${serverId}` : 'http://127.0.0.1:8000/api/v1/servers/';
+            const url = serverId ? `http://188.124.59.90:8000/api/v1/servers/${serverId}` : 'http://188.124.59.90:8000/api/v1/servers/';
 
             $.ajax({
                 url: url,
@@ -239,7 +239,7 @@ $(document).ready(function () {
     // Функция для удаления сервера
     function deleteServer(serverId) {
         $.ajax({
-            url: `http://127.0.0.1:8000/api/v1/servers/${serverId}`,
+            url: `http://188.124.59.90:8000/api/v1/servers/${serverId}`,
             method: 'DELETE',
             headers: {
                 'Authorization': 'Bearer ' + token

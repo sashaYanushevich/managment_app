@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Загрузка информации о пользователе
     const userInfoDiv = document.getElementById('user-info');
     if (userInfoDiv) {
-        fetch('http://127.0.0.1:8000/api/v1/users/me', {
+        fetch('http://188.124.59.90:8000/api/v1/users/me', {
             headers: {
                 'Authorization': 'Bearer ' + token
             }
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Загрузка пакетов пользователя
     const packagesTableBody = document.querySelector('#packages-table tbody');
     if (packagesTableBody) {
-        fetch('http://127.0.0.1:8000/api/v1/packages/my', {
+        fetch('http://188.124.59.90:8000/api/v1/packages/my', {
             headers: {
                 'Authorization': 'Bearer ' + token
             }

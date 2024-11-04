@@ -4,7 +4,7 @@ $(document).ready(function () {
     if (token) {
         // Получаем информацию о пользователе
         $.ajax({
-            url: 'http://127.0.0.1:8000/api/v1/users/me',
+            url: 'http://188.124.59.90:8000/api/v1/users/me',
             headers: {
                 'Authorization': 'Bearer ' + token
             },
