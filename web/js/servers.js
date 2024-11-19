@@ -178,64 +178,70 @@ $(document).ready(function () {
     });
 
     serverForm.on('submit', function (e) {
-    e.preventDefault();
-
-    const serverId = $('#server-id').val();
-    const packageId = parseInt($('#package-select').val());
-    const selectedPackage = packages.find(pkg => pkg.id === packageId);
-
-    const data = {
-        name: $('#server-name').val(),
-        max_modems: parseInt($('#server-max-modems').val()),
-        machine_data: $('#machine_data').val(), // Use machine_data as a single string
-        package_id: packageId
-    };
-
-    // Check modem availability in the selected package
-    $.ajax({
-        url: 'http://188.124.59.90:8000/api/v1/servers/',
-        headers: {
-            'Authorization': 'Bearer ' + token
-        },
-        success: function (servers) {
-            const serversInPackage = servers.filter(srv => srv.package_id === packageId && srv.id !== parseInt(serverId));
-            const usedModems = serversInPackage.reduce((sum, srv) => sum + srv.max_modems, 0);
-            const remainingModems = selectedPackage.max_modems - usedModems;
-
-            if (data.max_modems > remainingModems) {
-                alert('Exceeded available modems in the selected package.');
-                return;
-            }
-
-            const method = serverId ? 'PUT' : 'POST';
-            const url = serverId ? `http://188.124.59.90:8000/api/v1/servers/${serverId}` : 'http://188.124.59.90:8000/api/v1/servers/';
-
-            $.ajax({
-                url: url,
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                data: JSON.stringify(data),
-                success: function () {
-                    serverModal.hide();
-                    alert('Server saved');
-                    loadServers();
-                },
-                error: function (xhr, status, error) {
-                    console.error('Error saving server:', error);
-                    alert(xhr.responseJSON.detail || 'Error saving server');
+        e.preventDefault();
+    
+        const serverId = $('#server-id').val();
+        const packageId = parseInt($('#package-select').val());
+        const selectedPackage = packages.find(pkg => pkg.id === packageId);
+    
+        const machineData = $('#machine_data').val();
+        const parsedMachineData = parseMachineData(machineData); // Парсинг строки machine_data
+    
+        const data = {
+            name: $('#server-name').val(),
+            max_modems: parseInt($('#server-max-modems').val()),
+            package_id: packageId,
+            n_cpu: parseInt(parsedMachineData.n_cpu || 0), // Извлечение поля n_cpu
+            rootfs: parseInt(parsedMachineData.rootfs || 0), // Извлечение поля rootfs
+            mem: parseInt(parsedMachineData.mem || 0), // Извлечение поля mem
+            bios_uuid: parsedMachineData.bios_uuid || '' // Извлечение поля bios_uuid
+        };
+    
+        // Проверка доступности модемов в выбранном пакете
+        $.ajax({
+            url: 'http://188.124.59.90:8000/api/v1/servers/',
+            headers: {
+                'Authorization': 'Bearer ' + token
+            },
+            success: function (servers) {
+                const serversInPackage = servers.filter(srv => srv.package_id === packageId && srv.id !== parseInt(serverId));
+                const usedModems = serversInPackage.reduce((sum, srv) => sum + srv.max_modems, 0);
+                const remainingModems = selectedPackage.max_modems - usedModems;
+    
+                if (data.max_modems > remainingModems) {
+                    alert('Превышено количество доступных модемов в выбранном пакете.');
+                    return;
                 }
-            });
-        },
-        error: function (xhr, status, error) {
-            console.error('Error checking modems:', error);
-            alert('Error checking modems');
-        }
+    
+                const method = serverId ? 'PUT' : 'POST';
+                const url = serverId ? `http://188.124.59.90:8000/api/v1/servers/${serverId}` : 'http://188.124.59.90:8000/api/v1/servers/';
+    
+                $.ajax({
+                    url: url,
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    data: JSON.stringify(data),
+                    success: function () {
+                        serverModal.hide();
+                        alert('Сервер сохранен');
+                        loadServers();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Ошибка сохранения сервера:', error);
+                        alert(xhr.responseJSON.detail || 'Ошибка сохранения сервера');
+                    }
+                });
+            },
+            error: function (xhr, status, error) {
+                console.error('Ошибка проверки модемов:', error);
+                alert('Ошибка проверки модемов');
+            }
         });
     });
-
+    
     // Функция для удаления сервера
     function deleteServer(serverId) {
         $.ajax({
