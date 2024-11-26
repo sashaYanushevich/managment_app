@@ -58,21 +58,9 @@
                     <input type="number" id="max_modems" name="max_modems" required>
                 </div>
                 <div class="form-group">
-                    <label for="n_cpu">CPU Cores:</label>
-                    <input type="number" id="n_cpu" name="n_cpu">
-                </div>
-                <div class="form-group">
-                    <label for="rootfs">Root FS Size:</label>
-                    <input type="number" id="rootfs" name="rootfs">
-                </div>
-                <div class="form-group">
-                    <label for="mem">Memory Size:</label>
-                    <input type="number" id="mem" name="mem">
-                </div>
-                <div class="form-group">
-                    <label for="bios_uuid">BIOS UUID:</label>
-                    <input type="text" id="bios_uuid" name="bios_uuid">
-                </div>
+                    <label for="machine_data">Machine Parameters:</label>
+                    <input type="text" id="machine_data" name="machine_data" placeholder="n_cpu=4,rootfs=119110,mem=7796,bios_uuid=4c4c4544-0054">
+                </div>                
                 <button type="submit" class="btn">Save</button>
             </form>
         </div>

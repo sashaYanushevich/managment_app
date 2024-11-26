@@ -1,5 +1,3 @@
-// admin_servers.js
-
 $(document).ready(function () {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -28,7 +26,6 @@ $(document).ready(function () {
                 users.forEach(user => {
                     userSelect.append(`<option value="${user.id}">${user.id} - ${user.login}</option>`);
                 });
-                // Load packages for the first user by default
                 loadPackages();
             },
             error: function (error) {
@@ -61,14 +58,14 @@ $(document).ready(function () {
     }
 
     // Load packages when the user changes
-    userSelect.on('change', function() {
+    userSelect.on('change', function () {
         loadPackages();
     });
 
     // Function to load servers
     function loadServers() {
         $.ajax({
-            url: 'http://188.124.59.90:8000/api/v1/servers/all', // Assuming admin endpoint to get all servers
+            url: 'http://188.124.59.90:8000/api/v1/servers/all',
             headers: {
                 'Authorization': 'Bearer ' + token
             },
@@ -118,7 +115,6 @@ $(document).ready(function () {
 
     function openServerModal(serverId = null) {
         if (serverId) {
-            // Edit existing server
             modalTitle.text('Edit Server');
             fetch(`http://188.124.59.90:8000/api/v1/servers/${serverId}`, {
                 method: 'GET',
@@ -127,47 +123,30 @@ $(document).ready(function () {
                     'Content-Type': 'application/json',
                 }
             })
-            .then(response => response.json())
-            .then(server => {
-                serverForm.find('[name="server-id"]').val(server.id);
-                serverForm.find('[name="name"]').val(server.name);
-                serverForm.find('[name="max_modems"]').val(server.max_modems);
-                serverForm.find('[name="user_id"]').val(server.package.customer_id);
-                loadPackagesForUser(server.package.customer_id, server.package_id);
-                
-                // Parse machine_data and populate fields
-                const machineData = server.machine_data;
-                if (machineData) {
-                    const parsedData = parseMachineData(machineData);
-                    serverForm.find('[name="n_cpu"]').val(parsedData.n_cpu || '');
-                    serverForm.find('[name="rootfs"]').val(parsedData.rootfs || '');
-                    serverForm.find('[name="mem"]').val(parsedData.mem || '');
-                    serverForm.find('[name="bios_uuid"]').val(parsedData.bios_uuid || '');
-                } else {
-                    serverForm.find('[name="n_cpu"]').val('');
-                    serverForm.find('[name="rootfs"]').val('');
-                    serverForm.find('[name="mem"]').val('');
-                    serverForm.find('[name="bios_uuid"]').val('');
-                }
-            });
+                .then(response => response.json())
+                .then(server => {
+                    serverForm.find('[name="server-id"]').val(server.id);
+                    serverForm.find('[name="name"]').val(server.name);
+                    serverForm.find('[name="max_modems"]').val(server.max_modems);
+                    serverForm.find('[name="user_id"]').val(server.package.customer_id);
+                    loadPackagesForUser(server.package.customer_id, server.package_id);
+
+                    // Populate Machine Parameters string
+                    const machineData = server.machine_data || '';
+                    serverForm.find('[name="machine_data"]').val(machineData);
+                });
         } else {
-            // Add new server
             modalTitle.text('Add Server');
             serverForm.trigger('reset');
             serverForm.find('[name="server-id"]').val('');
             serverForm.find('[name="user_id"]').val(userSelect.val());
-            loadPackages(); // Load packages for the selected user
+            loadPackages();
         }
         serverModal.css('display', 'block');
     }
 
-    // Function to parse machine_data string into an object
     function parseMachineData(machineData) {
-        // Remove surrounding quotes if present
-        if (machineData.startsWith('"') && machineData.endsWith('"')) {
-            machineData = machineData.slice(1, -1);
-        }
-
+        if (!machineData) return {};
         const data = {};
         const pairs = machineData.split(',');
         pairs.forEach(pair => {
@@ -179,7 +158,6 @@ $(document).ready(function () {
         return data;
     }
 
-    // Function to load packages for a specific user and set selected package
     function loadPackagesForUser(userId, selectedPackageId) {
         $.ajax({
             url: `http://188.124.59.90:8000/api/v1/packages/user/${userId}`,
@@ -199,12 +177,10 @@ $(document).ready(function () {
         });
     }
 
-    // Function to close the modal
     function closeServerModal() {
         serverModal.css('display', 'none');
     }
 
-    // Function to delete a server
     function deleteServer(serverId) {
         fetch(`http://188.124.59.90:8000/api/v1/servers/${serverId}`, {
             method: 'DELETE',
@@ -212,34 +188,37 @@ $(document).ready(function () {
                 'Authorization': 'Bearer ' + token
             }
         })
-        .then(response => {
-            if (response.ok) {
-                alert('Server deleted');
-                loadServers();
-            } else {
-                return response.json().then(errorData => {
-                    throw new Error(errorData.detail || 'Error deleting server');
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error deleting server:', error);
-            alert(error.message);
-        });
+            .then(response => {
+                if (response.ok) {
+                    alert('Server deleted');
+                    loadServers();
+                } else {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.detail || 'Error deleting server');
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting server:', error);
+                alert(error.message);
+            });
     }
 
-    serverForm.on('submit', function(e) {
+    serverForm.on('submit', function (e) {
         e.preventDefault();
 
         const serverId = serverForm.find('[name="server-id"]').val();
+        const machineDataString = serverForm.find('[name="machine_data"]').val();
+        const machineData = parseMachineData(machineDataString);
+
         const data = {
             name: serverForm.find('[name="name"]').val(),
             max_modems: parseInt(serverForm.find('[name="max_modems"]').val()),
             package_id: parseInt(serverForm.find('[name="package_id"]').val()),
-            n_cpu: parseInt(serverForm.find('[name="n_cpu"]').val()) || null,
-            rootfs: parseInt(serverForm.find('[name="rootfs"]').val()) || null,
-            mem: parseInt(serverForm.find('[name="mem"]').val()) || null,
-            bios_uuid: serverForm.find('[name="bios_uuid"]').val() || null,
+            n_cpu: parseInt(machineData.n_cpu) || null,
+            rootfs: parseInt(machineData.rootfs) || null,
+            mem: parseInt(machineData.mem) || null,
+            bios_uuid: machineData.bios_uuid || null,
         };
 
         let method, url;
@@ -260,34 +239,30 @@ $(document).ready(function () {
             },
             body: JSON.stringify(data)
         })
-        .then(response => {
-            if (response.ok) {
-                closeServerModal();
-                alert('Server data saved');
-                loadServers();
-            } else {
-                closeServerModal();
-                alert('Server data saved');
-                loadServers();
-                // return response.json().then(errorData => {
-                //     throw new Error(errorData.detail || 'Error saving data');
-                // });
-            }
-        })
-        .catch(error => {
-            console.error('Error saving server:', error);
-            alert(error.message);
-        });
+            .then(response => {
+                if (response.ok) {
+                    closeServerModal();
+                    alert('Server data saved');
+                    loadServers();
+                } else {
+                    closeServerModal();
+                    alert('Server data saved');
+                    loadServers();
+                }
+            })
+            .catch(error => {
+                console.error('Error saving server:', error);
+                alert(error.message);
+            });
     });
 
-    // Handlers for opening and closing the modal
-    addServerButton.on('click', function() {
+    addServerButton.on('click', function () {
         openServerModal();
     });
 
     closeButton.on('click', closeServerModal);
 
-    $(window).on('click', function(e) {
+    $(window).on('click', function (e) {
         if ($(e.target).is(serverModal)) {
             closeServerModal();
         }

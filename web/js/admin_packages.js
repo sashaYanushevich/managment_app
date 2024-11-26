@@ -15,6 +15,11 @@ $(document).ready(function () {
     const closeButton = $('.close-button');
     const customerSelect = $('#customer_id');
 
+
+    addPackageButton.click(function(e) {
+        e.preventDefault();
+        openPackageModal();
+    });
     // Function to load users for the dropdown
     function loadUsers() {
         $.ajax({
@@ -36,6 +41,12 @@ $(document).ready(function () {
 
     // Load users when the page loads
     loadUsers();
+
+    function formatDateForInput(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
+    }
 
     // Function to load packages
     function loadPackages() {
@@ -101,17 +112,20 @@ $(document).ready(function () {
                 packageForm.find('[name="customer_id"]').val(package.customer_id);
                 packageForm.find('[name="comment"]').val(package.comment || '');
                 packageForm.find('[name="max_modems"]').val(package.max_modems);
-                packageForm.find('[name="expiry"]').val(package.expiry_date);
+                // Используйте функцию форматирования даты
+                packageForm.find('[name="expiry"]').val(formatDateForInput(package.expiry));
             });
         } else {
             // Add new package
             modalTitle.text('Add Package');
             packageForm.trigger('reset');
             packageForm.find('[name="package-id"]').val('');
+            const today = new Date().toISOString().split('T')[0];
+            packageForm.find('[name="expiry"]').attr('min', today);
         }
         packageModal.css('display', 'block');
     }
-
+    
     // Function to close the modal
     function closePackageModal() {
         packageModal.css('display', 'none');
@@ -137,18 +151,26 @@ $(document).ready(function () {
 
     packageForm.on('submit', function(e) {
         e.preventDefault();
-
+    
         const packageId = packageForm.find('[name="package-id"]').val();
         const data = {
             customer_id: parseInt(packageForm.find('[name="customer_id"]').val()),
             comment: packageForm.find('[name="comment"]').val(),
             max_modems: parseInt(packageForm.find('[name="max_modems"]').val()),
-            expiry: packageForm.find('[name="expiry"]').val(), // Изменено с expiry_date на expiry
+            expiry: packageForm.find('[name="expiry"]').val(),
         };
-
+    
+        // Проверка валидности даты
+        const selectedDate = new Date(data.expiry);
+        const today = new Date();
+        if (selectedDate < today) {
+            alert('Expiry date cannot be in the past');
+            return;
+        }
+    
         const method = packageId ? 'PUT' : 'POST';
         const url = packageId ? `http://188.124.59.90:8000/api/v1/packages/${packageId}` : 'http://188.124.59.90:8000/api/v1/packages/';
-
+    
         fetch(url, {
             method: method,
             headers: {
@@ -172,11 +194,6 @@ $(document).ready(function () {
             console.error('Error saving package:', error);
             alert(error.message);
         });
-    });
-    
-    // Handlers for opening and closing the modal
-    addPackageButton.on('click', function() {
-        openPackageModal();
     });
 
     closeButton.on('click', closePackageModal);
