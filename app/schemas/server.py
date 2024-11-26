@@ -14,6 +14,14 @@ class ServerCreate(BaseModel):
     mem: int
     bios_uuid: str
     package_id: int  
+    
+class PackageInServer(BaseModel):
+    id: int
+    customer_id: int
+    comment: Optional[str] = None
+
+    class Config:
+        orm_mode = True
 
 class ServerCreateInput(BaseModel):
     name: str
@@ -46,8 +54,9 @@ class ServerInDBBase(ServerBase):
     machine_data: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+
     class Config:
-        from_attributes = True
-        
+        orm_mode = True
+
 class Server(ServerInDBBase):
-    pass
+    package: Optional[PackageInServer] = None

@@ -1,0 +1,85 @@
+<!-- admin_servers.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Servers Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <h2>Servers</h2>
+    <button id="add-server" class="btn"><i class="fas fa-plus"></i> Add Server</button>
+    <table id="servers-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Max Modems</th>
+                <th>Package ID</th>
+                <th>User ID</th>
+                <th>License Hash</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Servers will be loaded dynamically -->
+        </tbody>
+    </table>
+
+    <!-- Modal for adding/editing server -->
+    <div id="server-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 id="modal-title">Add Server</h2>
+            <form id="server-form">
+                <input type="hidden" id="server-id" name="server-id">
+                <div class="form-group">
+                    <label for="user_id">User:</label>
+                    <select id="user_id" name="user_id" required>
+                        <!-- User options will be loaded dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="package_id">Package:</label>
+                    <select id="package_id" name="package_id" required>
+                        <!-- Package options will be loaded dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="name">Server Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="max_modems">Max Modems:</label>
+                    <input type="number" id="max_modems" name="max_modems" required>
+                </div>
+                <div class="form-group">
+                    <label for="n_cpu">CPU Cores:</label>
+                    <input type="number" id="n_cpu" name="n_cpu">
+                </div>
+                <div class="form-group">
+                    <label for="rootfs">Root FS Size:</label>
+                    <input type="number" id="rootfs" name="rootfs">
+                </div>
+                <div class="form-group">
+                    <label for="mem">Memory Size:</label>
+                    <input type="number" id="mem" name="mem">
+                </div>
+                <div class="form-group">
+                    <label for="bios_uuid">BIOS UUID:</label>
+                    <input type="text" id="bios_uuid" name="bios_uuid">
+                </div>
+                <button type="submit" class="btn">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Include necessary scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/static/js/admin_servers.js"></script>
+</body>
+</html>

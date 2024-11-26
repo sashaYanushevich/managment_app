@@ -30,49 +30,86 @@ async def create_server(
     """
     Создать новый сервер.
     """
-    # Получаем выбранный пакет
-    package = await crud_package.get(db, id=server_in.package_id)
-    if not package or package.customer_id != current_user.id:
-        raise HTTPException(status_code=400, detail="Пакет не найден или недоступен")
-
-    # Проверяем лимит модемов
-    servers = await crud_server.get_multi_by_package(db, package_id=package.id, customer_id=current_user.id)
-    total_modems = sum(server.max_modems for server in servers)
-    if total_modems + server_in.max_modems > package.max_modems:
-        raise HTTPException(status_code=400, detail="Превышен лимит модемов в пакете.")
-
-    # Собираем machine_data
-    machine_data = f"n_cpu={server_in.n_cpu},rootfs={server_in.rootfs},mem={server_in.mem},bios_uuid={server_in.bios_uuid}"
-
-    # Подготавливаем данные для создания сервера в базе данных
-    server_create_db = schemas.ServerCreateDB(
-        name=server_in.name,
-        max_modems=server_in.max_modems,
-        machine_data=machine_data,
-        package_id=server_in.package_id
-    )
-
-    # Создаем сервер в базе данных
-    server = await crud_server.create(db, obj_in=server_create_db)
-
-    # Вызов стороннего API для создания лицензии
     try:
-        license_data = await external_api.issue_license(
-            date_expiry=package.expiry.strftime("%Y-%m-%d") if package.expiry else None,
-            max_modems=server.max_modems,
-            machine_data=server.machine_data,
-            customer_id=current_user.login,
-            comment=server.name
-        )
-        # Сохраняем hash лицензии в базе данных
-        server.license_hash = license_data.get("license_hash")
-        await db.commit()
-        await db.refresh(server)
-    except Exception as e:
-        # Если возникла ошибка при создании лицензии, удаляем сервер
-        await crud_server.remove(db, id=server.id)
-        raise HTTPException(status_code=400, detail=str(e))
+        # Получаем выбранный пакет
+        try:
+            print(111111)
+            package = await crud_package.get(db, id=server_in.package_id)
+            if not package:
+                raise HTTPException(status_code=400, detail="Пакет не найден или недоступен")
+        except: pass
+        # Проверяем лимит модемов
+        try:
+            print(2222222)
+            servers = await crud_server.get_multi_by_package(db, package_id=package.id, customer_id=current_user.id)
+        except: pass
+        total_modems = sum(server.max_modems for server in servers)
+        if total_modems + server_in.max_modems > package.max_modems:
+            raise HTTPException(status_code=400, detail="Превышен лимит модемов в пакете.")
 
+        # Собираем machine_data
+        machine_data = f"n_cpu={server_in.n_cpu},rootfs={server_in.rootfs},mem={server_in.mem},bios_uuid={server_in.bios_uuid}"
+
+        # Подготавливаем данные для создания сервера в базе данных
+        server_create_db = schemas.ServerCreateDB(
+            name=server_in.name,
+            max_modems=server_in.max_modems,
+            machine_data=machine_data,
+            package_id=server_in.package_id
+        )
+        
+        print(333333)
+        # Создаем сервер в базе данных
+        server = await crud_server.create(db, obj_in=server_create_db)
+        print(44444)
+        # Вызов стороннего API для создания лицензии
+        try:
+            license_data = await external_api.issue_license(
+                date_expiry=package.expiry.strftime("%Y-%m-%d") if package.expiry else None,
+                max_modems=server.max_modems,
+                machine_data=server.machine_data,
+                customer_id=current_user.login,
+                comment=server.name
+            )
+            # Сохраняем hash лицензии в базе данных
+            server.license_hash = license_data.get("license_hash")
+            await db.commit()
+            await db.refresh(server)
+        except Exception as e:
+            # Если возникла ошибка при создании лицензии, удаляем сервер
+            await crud_server.remove(db, id=server.id)
+            raise HTTPException(status_code=400, detail=str(e))
+
+        return server
+    except: pass
+
+@router.get("/all", response_model=List[schemas.Server])
+async def read_servers(
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db),
+    current_user: models.User = Depends(deps.get_current_active_admin),
+) -> Any:
+    """
+    Get a list of all servers.
+    """
+    servers = await crud_server.get_multi(db=db, skip=skip, limit=limit)
+    return servers
+
+@router.get("/admin/{server_id}", response_model=schemas.Server)
+async def read_server_number(
+    *,
+    db: AsyncSession = Depends(get_db),
+    server_id: int,
+    current_user: models.User = Depends(deps.get_current_user),
+) -> Any:
+    """
+    Получить сервер по номеру.
+    """
+    server = await crud_server.get(db, id=server_id)
+    if not server:
+        raise HTTPException(status_code=404, detail="Сервер не найден")
+    
     return server
 
 @router.get("/{server_id}", response_model=schemas.Server)
@@ -88,9 +125,6 @@ async def read_server_number(
     server = await crud_server.get(db, id=server_id)
     if not server:
         raise HTTPException(status_code=404, detail="Сервер не найден")
-    
-    if server.package.customer_id != current_user.id:
-        raise HTTPException(status_code=403, detail="У вас нет доступа к этому серверу")
     
     return server
 
@@ -120,6 +154,7 @@ async def read_servers(
 
     return servers
 
+
 @router.put("/{server_id}", response_model=schemas.Server)
 async def update_server(
     *,
@@ -131,10 +166,11 @@ async def update_server(
     """
     Обновить сервер.
     """
-    server = await crud_server.get(db, id=server_id)
-    if not server or server.package.customer_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Сервер не найден")
-
+    try:
+        server = await crud_server.get(db, id=server_id)
+        if not server:
+            raise HTTPException(status_code=404, detail="Сервер не найден")
+    except: pass
     # Если меняются параметры сервера, проверяем лимиты и обновляем лицензию
     if server_in.max_modems and server_in.max_modems != server.max_modems:
         package = server.package
@@ -170,7 +206,7 @@ async def delete_server(
     Удалить сервер.
     """
     server = await crud_server.get(db, id=server_id)
-    if not server or server.package.customer_id != current_user.id:
+    if not server:
         raise HTTPException(status_code=404, detail="Сервер не найден")
 
     # Отзываем лицензию через сторонний API
@@ -181,3 +217,4 @@ async def delete_server(
 
     server = await crud_server.remove(db, id=server_id)
     return server
+

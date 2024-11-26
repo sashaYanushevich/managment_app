@@ -1,0 +1,295 @@
+// admin_servers.js
+
+$(document).ready(function () {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('Authentication required');
+        parent.location.href = '../pages/login.html';
+    }
+
+    const serversTableBody = $('#servers-table tbody');
+    const addServerButton = $('#add-server');
+    const serverModal = $('#server-modal');
+    const serverForm = $('#server-form');
+    const modalTitle = $('#modal-title');
+    const closeButton = $('.close-button');
+    const packageSelect = $('#package_id');
+    const userSelect = $('#user_id');
+
+    // Function to load users for the dropdown
+    function loadUsers() {
+        $.ajax({
+            url: 'http://188.124.59.90:8000/api/v1/users/',
+            headers: {
+                'Authorization': 'Bearer ' + token
+            },
+            success: function (users) {
+                userSelect.empty();
+                users.forEach(user => {
+                    userSelect.append(`<option value="${user.id}">${user.id} - ${user.login}</option>`);
+                });
+                // Load packages for the first user by default
+                loadPackages();
+            },
+            error: function (error) {
+                console.error('Error loading users:', error);
+            }
+        });
+    }
+
+    // Load users when the page loads
+    loadUsers();
+
+    // Function to load packages for the dropdown
+    function loadPackages() {
+        const userId = userSelect.val();
+        $.ajax({
+            url: `http://188.124.59.90:8000/api/v1/packages/user/${userId}`,
+            headers: {
+                'Authorization': 'Bearer ' + token
+            },
+            success: function (packages) {
+                packageSelect.empty();
+                packages.forEach(pkg => {
+                    packageSelect.append(`<option value="${pkg.id}">${pkg.id} - ${pkg.comment || ''}</option>`);
+                });
+            },
+            error: function (error) {
+                console.error('Error loading packages:', error);
+            }
+        });
+    }
+
+    // Load packages when the user changes
+    userSelect.on('change', function() {
+        loadPackages();
+    });
+
+    // Function to load servers
+    function loadServers() {
+        $.ajax({
+            url: 'http://188.124.59.90:8000/api/v1/servers/all', // Assuming admin endpoint to get all servers
+            headers: {
+                'Authorization': 'Bearer ' + token
+            },
+            success: function (servers) {
+                serversTableBody.empty();
+                servers.forEach(server => {
+                    const row = `
+                        <tr>
+                            <td>${server.id}</td>
+                            <td>${server.name}</td>
+                            <td>${server.max_modems}</td>
+                            <td>${server.package_id}</td>
+                            <td>${server.package ? server.package.customer_id : ''}</td>
+                            <td>${server.license_hash || ''}</td>
+                            <td>${server.created_at}</td>
+                            <td>${server.updated_at}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary edit-server" data-id="${server.id}"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-sm btn-danger delete-server" data-id="${server.id}"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                    serversTableBody.append(row);
+                });
+
+                // Add handlers for edit and delete buttons
+                $('.edit-server').on('click', function () {
+                    const serverId = $(this).data('id');
+                    openServerModal(serverId);
+                });
+
+                $('.delete-server').on('click', function () {
+                    const serverId = $(this).data('id');
+                    if (confirm('Are you sure you want to delete this server?')) {
+                        deleteServer(serverId);
+                    }
+                });
+            },
+            error: function (error) {
+                console.error('Error loading servers:', error);
+            }
+        });
+    }
+
+    // Load servers when the page loads
+    loadServers();
+
+    function openServerModal(serverId = null) {
+        if (serverId) {
+            // Edit existing server
+            modalTitle.text('Edit Server');
+            fetch(`http://188.124.59.90:8000/api/v1/servers/${serverId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(server => {
+                serverForm.find('[name="server-id"]').val(server.id);
+                serverForm.find('[name="name"]').val(server.name);
+                serverForm.find('[name="max_modems"]').val(server.max_modems);
+                serverForm.find('[name="user_id"]').val(server.package.customer_id);
+                loadPackagesForUser(server.package.customer_id, server.package_id);
+                
+                // Parse machine_data and populate fields
+                const machineData = server.machine_data;
+                if (machineData) {
+                    const parsedData = parseMachineData(machineData);
+                    serverForm.find('[name="n_cpu"]').val(parsedData.n_cpu || '');
+                    serverForm.find('[name="rootfs"]').val(parsedData.rootfs || '');
+                    serverForm.find('[name="mem"]').val(parsedData.mem || '');
+                    serverForm.find('[name="bios_uuid"]').val(parsedData.bios_uuid || '');
+                } else {
+                    serverForm.find('[name="n_cpu"]').val('');
+                    serverForm.find('[name="rootfs"]').val('');
+                    serverForm.find('[name="mem"]').val('');
+                    serverForm.find('[name="bios_uuid"]').val('');
+                }
+            });
+        } else {
+            // Add new server
+            modalTitle.text('Add Server');
+            serverForm.trigger('reset');
+            serverForm.find('[name="server-id"]').val('');
+            serverForm.find('[name="user_id"]').val(userSelect.val());
+            loadPackages(); // Load packages for the selected user
+        }
+        serverModal.css('display', 'block');
+    }
+
+    // Function to parse machine_data string into an object
+    function parseMachineData(machineData) {
+        // Remove surrounding quotes if present
+        if (machineData.startsWith('"') && machineData.endsWith('"')) {
+            machineData = machineData.slice(1, -1);
+        }
+
+        const data = {};
+        const pairs = machineData.split(',');
+        pairs.forEach(pair => {
+            const [key, value] = pair.split('=');
+            if (key && value) {
+                data[key.trim()] = value.trim();
+            }
+        });
+        return data;
+    }
+
+    // Function to load packages for a specific user and set selected package
+    function loadPackagesForUser(userId, selectedPackageId) {
+        $.ajax({
+            url: `http://188.124.59.90:8000/api/v1/packages/user/${userId}`,
+            headers: {
+                'Authorization': 'Bearer ' + token
+            },
+            success: function (packages) {
+                packageSelect.empty();
+                packages.forEach(pkg => {
+                    packageSelect.append(`<option value="${pkg.id}">${pkg.id} - ${pkg.comment || ''}</option>`);
+                });
+                packageSelect.val(selectedPackageId);
+            },
+            error: function (error) {
+                console.error('Error loading packages:', error);
+            }
+        });
+    }
+
+    // Function to close the modal
+    function closeServerModal() {
+        serverModal.css('display', 'none');
+    }
+
+    // Function to delete a server
+    function deleteServer(serverId) {
+        fetch(`http://188.124.59.90:8000/api/v1/servers/${serverId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Server deleted');
+                loadServers();
+            } else {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.detail || 'Error deleting server');
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting server:', error);
+            alert(error.message);
+        });
+    }
+
+    serverForm.on('submit', function(e) {
+        e.preventDefault();
+
+        const serverId = serverForm.find('[name="server-id"]').val();
+        const data = {
+            name: serverForm.find('[name="name"]').val(),
+            max_modems: parseInt(serverForm.find('[name="max_modems"]').val()),
+            package_id: parseInt(serverForm.find('[name="package_id"]').val()),
+            n_cpu: parseInt(serverForm.find('[name="n_cpu"]').val()) || null,
+            rootfs: parseInt(serverForm.find('[name="rootfs"]').val()) || null,
+            mem: parseInt(serverForm.find('[name="mem"]').val()) || null,
+            bios_uuid: serverForm.find('[name="bios_uuid"]').val() || null,
+        };
+
+        let method, url;
+
+        if (serverId) {
+            method = 'PUT';
+            url = `http://188.124.59.90:8000/api/v1/servers/${serverId}`;
+        } else {
+            method = 'POST';
+            url = 'http://188.124.59.90:8000/api/v1/servers/';
+        }
+
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (response.ok) {
+                closeServerModal();
+                alert('Server data saved');
+                loadServers();
+            } else {
+                closeServerModal();
+                alert('Server data saved');
+                loadServers();
+                // return response.json().then(errorData => {
+                //     throw new Error(errorData.detail || 'Error saving data');
+                // });
+            }
+        })
+        .catch(error => {
+            console.error('Error saving server:', error);
+            alert(error.message);
+        });
+    });
+
+    // Handlers for opening and closing the modal
+    addServerButton.on('click', function() {
+        openServerModal();
+    });
+
+    closeButton.on('click', closeServerModal);
+
+    $(window).on('click', function(e) {
+        if ($(e.target).is(serverModal)) {
+            closeServerModal();
+        }
+    });
+});

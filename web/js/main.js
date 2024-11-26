@@ -47,6 +47,9 @@ $(document).ready(function () {
                         <li>
                             <a href="/static/pages/admin_packages.html" class="nav-link" target="content-frame"><i class="fas fa-box"></i> Packages</a>
                         </li>
+                        <li>
+                            <a href="/static/pages/admin_servers.html" class="nav-link" target="content-frame"><i class="fas fa-box"></i> Servers</a>
+                        </li>
                     </ul>
                 </li>
             `);

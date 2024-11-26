@@ -53,7 +53,7 @@ $(document).ready(function () {
                             <td>${package.customer_id}</td>
                             <td>${package.comment || ''}</td>
                             <td>${package.max_modems}</td>
-                            <td>${package.free_modems}</td>
+                            <td>${package.max_modems}</td>
                             <td>${package.start_date}</td>
                             <td>${package.expiry}</td>
                             <td>

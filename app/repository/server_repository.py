@@ -10,9 +10,7 @@ class CRUDServer:
     async def get(self, db: AsyncSession, id: int) -> Optional[Server]:
         result = await db.execute(
             select(Server)
-            .options(
-                joinedload(Server.package).joinedload(Package.servers)
-            )
+            .options(joinedload(Server.package))
             .filter(Server.id == id)
         )
         return result.scalars().first()
@@ -42,10 +40,19 @@ class CRUDServer:
     async def get_multi_by_package(self, db: AsyncSession, package_id: int, customer_id: int) -> List[Server]:
         result = await db.execute(
             select(Server)
-            .join(Package)
+            .options(joinedload(Server.package))
             .filter(Server.package_id == package_id, Package.customer_id == customer_id)
         )
         return result.scalars().all()
+    
+    async def get_multi(self, db: AsyncSession, skip: int = 0, limit: int = 100) -> List[Server]:
+        result = await db.execute(
+            select(Server)
+            .options(joinedload(Server.package))
+            .offset(skip)
+            .limit(limit)
+        )
+        return result.scalars().unique().all()
 
 
 crud_server = CRUDServer()

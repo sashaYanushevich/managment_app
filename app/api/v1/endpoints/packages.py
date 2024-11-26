@@ -49,6 +49,23 @@ async def read_my_packages(
         package.free_modems = package.max_modems - used_modems
     return packages
 
+@router.get("/user/{user_id}", response_model=List[schemas.Package])
+async def read_user_packages(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: models.User = Depends(deps.get_current_active_admin),
+) -> Any:
+    """
+    Get a list of packages for a specific user.
+    """
+    # Check if the user exists
+    user = await repository.user.get(db, id=user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    packages = await repository.package.get_by_customer_id(db, customer_id=user_id)
+    return packages
+
 @router.get("/{package_id}", response_model=schemas.Package)
 async def read_package(
     package_id: int,
