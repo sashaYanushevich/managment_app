@@ -35,8 +35,8 @@ $(document).ready(function () {
                 updatePackageInfo();
             },
             error: function (xhr, status, error) {
-                console.error('Ошибка при загрузке пакетов:', error);
-                alert('Ошибка при загрузке пакетов');
+                console.error('Error load package', error);
+                alert('Error load package');
             }
         });
     }
@@ -59,14 +59,14 @@ $(document).ready(function () {
                     const remainingModems = selectedPackage.max_modems - usedModems;
 
                     packageInfo.html(`
-                        <p>Максимальное количество модемов в пакете: ${selectedPackage.max_modems}</p>
-                        <p>Использовано модемов: ${usedModems}</p>
-                        <p>Оставшееся количество модемов: ${remainingModems}</p>
+                        <p>Max modems in package: ${selectedPackage.max_modems}</p>
+                        <p>Used Modems: ${usedModems}</p>
+                        <p>Remaining Modems: ${remainingModems}</p>
                     `);
                 },
                 error: function (xhr, status, error) {
-                    console.error('Ошибка при загрузке серверов:', error);
-                    alert('Ошибка при загрузке серверов');
+                    console.error('Error:', error);
+                    alert('Error');
                 }
             });
         } else {
@@ -118,14 +118,14 @@ $(document).ready(function () {
 
                 $('.delete-server').on('click', function () {
                     const serverId = $(this).data('id');
-                    if (confirm('Вы уверены, что хотите удалить сервер?')) {
+                    if (confirm('Delete this server?')) {
                         deleteServer(serverId);
                     }
                 });
             },
             error: function (xhr, status, error) {
-                console.error('Ошибка при загрузке серверов:', error);
-                alert('Ошибка при загрузке серверов');
+                console.error('Error', error);
+                alert('Error');
             }
         });
     }
@@ -209,7 +209,7 @@ $(document).ready(function () {
                 const remainingModems = selectedPackage.max_modems - usedModems;
     
                 if (data.max_modems > remainingModems) {
-                    alert('Превышено количество доступных модемов в выбранном пакете.');
+                    alert('The number of available modems in the selected package has been exceeded.');
                     return;
                 }
     
@@ -230,14 +230,14 @@ $(document).ready(function () {
                         loadServers();
                     },
                     error: function (xhr, status, error) {
-                        console.error('Ошибка сохранения сервера:', error);
-                        alert(xhr.responseJSON.detail || 'Ошибка сохранения сервера');
+                        console.error('Server save error:', error);
+                        alert(xhr.responseJSON.detail || 'Server save error:');
                     }
                 });
             },
             error: function (xhr, status, error) {
-                console.error('Ошибка проверки модемов:', error);
-                alert('Ошибка проверки модемов');
+                console.error('Modem check error:', error);
+                alert('Modem check error');
             }
         });
     });
@@ -251,12 +251,12 @@ $(document).ready(function () {
                 'Authorization': 'Bearer ' + token
             },
             success: function () {
-                alert('Сервер удален');
+                alert('Server delete');
                 loadServers();
             },
             error: function (xhr, status, error) {
-                console.error('Ошибка при удалении сервера:', error);
-                alert('Ошибка при удалении сервера');
+                console.error('Error when deleting a server:', error);
+                alert('Error when deleting a server');
             }
         });
     }

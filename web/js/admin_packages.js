@@ -42,6 +42,15 @@ $(document).ready(function () {
     // Load users when the page loads
     loadUsers();
 
+    function calculateFreeModems(packages) {
+        packages.forEach(pkg => {
+            // Рассчитываем количество используемых модемов
+            const usedModems = pkg.servers.reduce((sum, server) => sum + server.max_modems, 0);
+            // Вычисляем свободные модемы
+            pkg.free_modems = pkg.max_modems - usedModems;
+        });
+    }
+
     function formatDateForInput(dateString) {
         if (!dateString) return '';
         const date = new Date(dateString);
@@ -56,6 +65,7 @@ $(document).ready(function () {
                 'Authorization': 'Bearer ' + token
             },
             success: function (packages) {
+                calculateFreeModems(packages);
                 packagesTableBody.empty();
                 packages.forEach(package => {
                     const row = `
@@ -64,7 +74,7 @@ $(document).ready(function () {
                             <td>${package.customer_id}</td>
                             <td>${package.comment || ''}</td>
                             <td>${package.max_modems}</td>
-                            <td>${package.max_modems}</td>
+                            <td>${package.free_modems}</td>
                             <td>${package.start_date}</td>
                             <td>${package.expiry}</td>
                             <td>

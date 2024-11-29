@@ -68,7 +68,7 @@ async def create_server(
                 date_expiry=package.expiry.strftime("%Y-%m-%d") if package.expiry else None,
                 max_modems=server.max_modems,
                 machine_data=server.machine_data,
-                customer_id=current_user.login,
+                customer_id=current_user.id,
                 comment=server.name
             )
             # Сохраняем hash лицензии в базе данных
@@ -185,7 +185,7 @@ async def update_server(
                 date_expiry=package.expiry.strftime("%Y-%m-%d") if package.expiry else None,
                 max_modems=server_in.max_modems,
                 machine_data=server.machine_data,
-                customer_id=current_user.login,
+                customer_id=current_user.id,
                 comment=server.name
             )
             server.license_hash = license_data.get("license_hash")
