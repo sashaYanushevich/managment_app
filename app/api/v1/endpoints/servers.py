@@ -33,7 +33,6 @@ async def create_server(
     try:
         # Получаем выбранный пакет
         try:
-            print(111111)
             package = await crud_package.get(db, id=server_in.package_id)
             if not package:
                 raise HTTPException(status_code=400, detail="Пакет не найден или недоступен")
@@ -58,17 +57,15 @@ async def create_server(
             package_id=server_in.package_id
         )
         
-        print(333333)
         # Создаем сервер в базе данных
         server = await crud_server.create(db, obj_in=server_create_db)
-        print(44444)
         # Вызов стороннего API для создания лицензии
         try:
             license_data = await external_api.issue_license(
                 date_expiry=package.expiry.strftime("%Y-%m-%d") if package.expiry else None,
                 max_modems=server.max_modems,
                 machine_data=server.machine_data,
-                customer_id=current_user.id,
+                customer_id=package.customer.login,
                 comment=server.name
             )
             # Сохраняем hash лицензии в базе данных
@@ -185,7 +182,7 @@ async def update_server(
                 date_expiry=package.expiry.strftime("%Y-%m-%d") if package.expiry else None,
                 max_modems=server_in.max_modems,
                 machine_data=server.machine_data,
-                customer_id=current_user.id,
+                customer_id=package.customer.login,
                 comment=server.name
             )
             server.license_hash = license_data.get("license_hash")
