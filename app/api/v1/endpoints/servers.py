@@ -30,55 +30,50 @@ async def create_server(
     """
     Создать новый сервер.
     """
+    # Получаем выбранный пакет
+    package = await crud_package.get(db, id=server_in.package_id)
+    if not package:
+        raise HTTPException(status_code=400, detail="Пакет не найден или недоступен")
+
+    # Проверяем лимит модемов
+    servers = await crud_server.get_multi_by_package(db, package_id=package.id, customer_id=current_user.id)
+    total_modems = sum(server.max_modems for server in servers)
+    if total_modems + server_in.max_modems > package.max_modems:
+        raise HTTPException(status_code=400, detail="Превышен лимит модемов в пакете.")
+
+    # Собираем machine_data
+    machine_data = f"n_cpu={server_in.n_cpu},rootfs={server_in.rootfs},mem={server_in.mem},bios_uuid={server_in.bios_uuid}"
+
+    # Подготавливаем данные для создания сервера в базе данных
+    server_create_db = schemas.ServerCreateDB(
+        name=server_in.name,
+        max_modems=server_in.max_modems,
+        machine_data=machine_data,
+        package_id=server_in.package_id
+    )
+    
+    # Создаем сервер в базе данных
+    server = await crud_server.create(db, obj_in=server_create_db)
+
+    # Вызов стороннего API для создания лицензии
     try:
-        # Получаем выбранный пакет
-        try:
-            package = await crud_package.get(db, id=server_in.package_id)
-            if not package:
-                raise HTTPException(status_code=400, detail="Пакет не найден или недоступен")
-        except: pass
-        # Проверяем лимит модемов
-        try:
-            print(2222222)
-            servers = await crud_server.get_multi_by_package(db, package_id=package.id, customer_id=current_user.id)
-        except: pass
-        total_modems = sum(server.max_modems for server in servers)
-        if total_modems + server_in.max_modems > package.max_modems:
-            raise HTTPException(status_code=400, detail="Превышен лимит модемов в пакете.")
-
-        # Собираем machine_data
-        machine_data = f"n_cpu={server_in.n_cpu},rootfs={server_in.rootfs},mem={server_in.mem},bios_uuid={server_in.bios_uuid}"
-
-        # Подготавливаем данные для создания сервера в базе данных
-        server_create_db = schemas.ServerCreateDB(
-            name=server_in.name,
-            max_modems=server_in.max_modems,
-            machine_data=machine_data,
-            package_id=server_in.package_id
+        license_data = await external_api.issue_license(
+            date_expiry=package.expiry.strftime("%Y-%m-%d") if package.expiry else None,
+            max_modems=server.max_modems,
+            machine_data=server.machine_data,
+            customer_id=package.customer.login,
+            comment=server.name
         )
-        
-        # Создаем сервер в базе данных
-        server = await crud_server.create(db, obj_in=server_create_db)
-        # Вызов стороннего API для создания лицензии
-        try:
-            license_data = await external_api.issue_license(
-                date_expiry=package.expiry.strftime("%Y-%m-%d") if package.expiry else None,
-                max_modems=server.max_modems,
-                machine_data=server.machine_data,
-                customer_id=package.customer.login,
-                comment=server.name
-            )
-            # Сохраняем hash лицензии в базе данных
-            server.license_hash = license_data.get("license_hash")
-            await db.commit()
-            await db.refresh(server)
-        except Exception as e:
-            # Если возникла ошибка при создании лицензии, удаляем сервер
-            await crud_server.remove(db, id=server.id)
-            raise HTTPException(status_code=400, detail=str(e))
+        # Сохраняем hash лицензии в базе данных
+        server.license_hash = license_data.get("license_hash")
+        await db.commit()
+        await db.refresh(server)
+    except Exception as e:
+        # Если возникла ошибка при создании лицензии, удаляем сервер
+        await crud_server.remove(db, id=server.id)
+        raise HTTPException(status_code=400, detail=str(e))
 
-        return server
-    except: pass
+    return server
 
 @router.get("/all", response_model=List[schemas.Server])
 async def read_servers(
