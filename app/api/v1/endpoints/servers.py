@@ -30,8 +30,14 @@ async def create_server(
     """
     Создать новый сервер.
     """
-    # Получаем выбранный пакет
-    package = await crud_package.get(db, id=server_in.package_id)
+    # Get package with customer relationship loaded
+    result = await db.execute(
+        select(models.Package)
+        .options(selectinload(models.Package.customer))
+        .filter(models.Package.id == server_in.package_id)
+    )
+    package = result.scalar_one_or_none()
+    
     if not package:
         raise HTTPException(status_code=400, detail="Пакет не найден или недоступен")
 
@@ -158,14 +164,16 @@ async def update_server(
     """
     Обновить сервер.
     """
-    try:
-        server = await crud_server.get(db, id=server_id)
-        if not server:
-            raise HTTPException(status_code=404, detail="Сервер не найден")
-    except: pass
+    server = await crud_server.get(db, id=server_id)
+    if not server:
+        raise HTTPException(status_code=404, detail="Сервер не найден")
+
     # Если меняются параметры сервера, проверяем лимиты и обновляем лицензию
     if server_in.max_modems and server_in.max_modems != server.max_modems:
-        package = server.package
+        package = await crud_package.get(db, id=server.package_id)
+        if not package:
+            raise HTTPException(status_code=404, detail="Пакет не найден")
+
         total_modems = sum(s.max_modems for s in package.servers if s.id != server.id)
         if total_modems + server_in.max_modems > package.max_modems:
             raise HTTPException(status_code=400, detail="Превышен лимит модемов в пакете.")
