@@ -23,7 +23,11 @@ class CRUDServer:
         return db_obj
 
     async def update(self, db: AsyncSession, *, db_obj: Server, obj_in: Union[ServerUpdate, Dict[str, Any]]) -> Server:
-        update_data = obj_in.dict(exclude_unset=True)
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.dict(exclude_unset=True)
+            
         for field in update_data:
             setattr(db_obj, field, update_data[field])
         await db.commit()

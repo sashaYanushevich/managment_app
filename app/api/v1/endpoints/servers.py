@@ -203,12 +203,12 @@ async def update_server(
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
-    # Update other fields
+    # Update other fields using the original Pydantic model
     update_data = server_in.dict(exclude_unset=True)
     if 'license_hash' in update_data:
         del update_data['license_hash']  # Remove license_hash from update data
     
-    server = await crud_server.update(db, db_obj=server, obj_in=update_data)
+    server = await crud_server.update(db, db_obj=server, obj_in=server_in)
     return server
 
 @router.delete("/{server_id}", response_model=schemas.Server)
