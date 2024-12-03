@@ -46,6 +46,7 @@ class ServerUpdate(BaseModel):
     mem: Optional[int] = None
     bios_uuid: Optional[str] = None
     package_id: Optional[int] = None
+    license_hash: Optional[str] = None
 
 class ServerInDBBase(ServerBase):
     id: int

@@ -197,11 +197,18 @@ async def update_server(
                 customer_id=package.customer.login,
                 comment=server.name
             )
-            server_in.license_hash = license_data.get("license_hash")
+            # Update the server directly instead of through server_in
+            server.license_hash = license_data.get("license_hash")
+            await db.commit()
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
-    server = await crud_server.update(db, db_obj=server, obj_in=server_in)
+    # Update other fields
+    update_data = server_in.dict(exclude_unset=True)
+    if 'license_hash' in update_data:
+        del update_data['license_hash']  # Remove license_hash from update data
+    
+    server = await crud_server.update(db, db_obj=server, obj_in=update_data)
     return server
 
 @router.delete("/{server_id}", response_model=schemas.Server)
