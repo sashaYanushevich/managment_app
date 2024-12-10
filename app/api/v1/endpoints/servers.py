@@ -61,7 +61,6 @@ async def create_server(
     # Создаем сервер в базе данных
     server = await crud_server.create(db, obj_in=server_create_db)
 
-    # Вызов стороннего API для создания лицензии
     try:
         license_data = await external_api.issue_license(
             date_expiry=package.expiry.strftime("%Y-%m-%d") if package.expiry else None,
@@ -70,12 +69,24 @@ async def create_server(
             customer_id=package.customer.login,
             comment=server.name
         )
-        # Сохраняем hash лицензии в базе данных
+        
+        # Update server with license data
         server.license_hash = license_data.get("license_hash")
+        server.setup_link = license_data.get("SETUP_LINK")
         await db.commit()
-        await db.refresh(server)
+        
+        # Refresh server with package relationship loaded
+        result = await db.execute(
+            select(models.Server)
+            .options(selectinload(models.Server.package))
+            .filter(models.Server.id == server.id)
+        )
+        server = result.scalar_one_or_none()
+        
+        if not server:
+            raise HTTPException(status_code=404, detail="Server not found after creation")
+            
     except Exception as e:
-        # Если возникла ошибка при создании лицензии, удаляем сервер
         await crud_server.remove(db, id=server.id)
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -152,6 +163,22 @@ async def read_servers(
 
     return servers
 
+@router.get("/by-package/{package_id}", response_model=List[schemas.Server])
+async def get_servers_by_package(
+    *,
+    db: AsyncSession = Depends(get_db),
+    package_id: int,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Get all servers for a specific package.
+    """
+    servers = await crud_server.get_multi_by_package(
+        db, 
+        package_id=package_id,
+        customer_id=current_user.id
+    )
+    return servers
 
 @router.put("/{server_id}", response_model=schemas.Server)
 async def update_server(

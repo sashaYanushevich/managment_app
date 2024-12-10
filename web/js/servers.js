@@ -30,7 +30,10 @@ $(document).ready(function () {
                 console.log(packages);
                 packageSelect.empty();
                 data.forEach(pkg => {
-                    packageSelect.append(`<option value="${pkg.id}">${pkg.comment}</option>`);
+                    // Calculate free modems for each package
+                    const usedModems = pkg.servers ? pkg.servers.reduce((sum, server) => sum + server.max_modems, 0) : 0;
+                    const freeModems = pkg.max_modems - usedModems;
+                    packageSelect.append(`<option value="${pkg.id}" data-free="${freeModems}">${pkg.comment}</option>`);
                 });
                 updatePackageInfo();
             },
@@ -44,31 +47,17 @@ $(document).ready(function () {
     // Обновление информации о выбранном пакете
     function updatePackageInfo() {
         const packageId = parseInt(packageSelect.val());
+        const selectedOption = packageSelect.find('option:selected');
+        const freeModems = selectedOption.data('free');
+        
+        $('#package-free-modems').text(`Free modems: ${freeModems}`);
+        
         const selectedPackage = packages.find(pkg => pkg.id === packageId);
-
         if (selectedPackage) {
-            // Получаем количество модемов, занятых серверами в этом пакете
-            $.ajax({
-                url: 'http://188.124.59.90:8000/api/v1/servers/',
-                headers: {
-                    'Authorization': 'Bearer ' + token
-                },
-                success: function (servers) {
-                    const serversInPackage = servers.filter(srv => srv.package_id === packageId);
-                    const usedModems = serversInPackage.reduce((sum, srv) => sum + srv.max_modems, 0);
-                    const remainingModems = selectedPackage.max_modems - usedModems;
-
-                    packageInfo.html(`
-                        <p>Max modems in package: ${selectedPackage.max_modems}</p>
-                        <p>Used Modems: ${usedModems}</p>
-                        <p>Remaining Modems: ${remainingModems}</p>
-                    `);
-                },
-                error: function (xhr, status, error) {
-                    console.error('Error:', error);
-                    alert('Error');
-                }
-            });
+            packageInfo.html(`
+                <p>Max modems in package: ${selectedPackage.max_modems}</p>
+                <p>Free Modems: ${freeModems}</p>
+            `);
         } else {
             packageInfo.empty();
         }
@@ -104,6 +93,7 @@ $(document).ready(function () {
                             <td class="action-buttons">
                                 <button class="btn btn-sm btn-primary edit-server" data-id="${server.id}"><i class="fas fa-edit"></i></button>
                                 <button class="btn btn-sm btn-danger delete-server" data-id="${server.id}"><i class="fas fa-trash"></i></button>
+                                <button class="btn btn-sm btn-info setup-link" data-id="${server.id}"><i class="fas fa-link"></i></button>
                             </td>
                         </tr>
                     `;
@@ -121,6 +111,66 @@ $(document).ready(function () {
                     if (confirm('Delete this server?')) {
                         deleteServer(serverId);
                     }
+                });
+
+                $('.setup-link').on('click', function() {
+                    const serverId = $(this).data('id');
+                    $.ajax({
+                        url: `http://188.124.59.90:8000/api/v1/servers/${serverId}`,
+                        headers: {
+                            'Authorization': 'Bearer ' + token
+                        },
+                        success: function(server) {
+                            if (server.setup_link) {
+                                const modalDiv = document.createElement('div');
+                                modalDiv.className = 'modal fade';
+                                modalDiv.innerHTML = `
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Setup Link</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Setup Link for server "${server.name}":</p>
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" value="${server.setup_link}" readonly>
+                                                    <button class="btn btn-outline-secondary copy-link" type="button">Copy</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                                
+                                document.body.appendChild(modalDiv);
+                                const setupLinkModal = new bootstrap.Modal(modalDiv, {
+                                    backdrop: false
+                                });
+                                setupLinkModal.show();
+
+                                modalDiv.querySelector('.copy-link').addEventListener('click', function() {
+                                    const input = modalDiv.querySelector('input');
+                                    input.select();
+                                    document.execCommand('copy');
+                                    alert('Link copied to clipboard!');
+                                });
+
+                                modalDiv.addEventListener('hidden.bs.modal', function() {
+                                    document.body.removeChild(modalDiv);
+                                    const backdrop = document.querySelector('.modal-backdrop');
+                                    if (backdrop) {
+                                        backdrop.remove();
+                                    }
+                                });
+                            } else {
+                                alert('Setup link is not available for this server');
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error fetching setup link:', error);
+                            alert('Error fetching setup link');
+                        }
+                    });
                 });
             },
             error: function (xhr, status, error) {
@@ -226,7 +276,7 @@ $(document).ready(function () {
                     data: JSON.stringify(data),
                     success: function () {
                         serverModal.hide();
-                        alert('Сервер сохранен');
+                        alert('Server saved');
                         loadServers();
                     },
                     error: function (xhr, status, error) {
@@ -277,6 +327,6 @@ $(document).ready(function () {
         openServerModal();
     });
 
-    // Загрузка пакетов и серверов при загрузке страницы
+    // Загрузка пакетов и серверов при загрузке ��траницы
     loadPackages().then(loadServers);
 });

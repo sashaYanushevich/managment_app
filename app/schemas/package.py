@@ -2,7 +2,7 @@ from typing import Optional, List
 from datetime import date, datetime, timezone
 from pydantic import BaseModel, Field
 from .server import Server
-
+from .user import User
 class PackageBase(BaseModel):
     comment: Optional[str] = None
     max_modems: Optional[int] = None
@@ -35,8 +35,12 @@ class PackageInDBBase(PackageBase):
 class Package(PackageInDBBase):
     free_modems: Optional[int] = None
     servers: List[Server] = []
+    customer: User = None
 
     class Config:
         from_attributes = True
+
+class ImportData(BaseModel):
+    import_data: str
 
 Package.model_rebuild()

@@ -61,3 +61,4 @@ class ServerInDBBase(ServerBase):
 
 class Server(ServerInDBBase):
     package: Optional[PackageInServer] = None
+    setup_link: Optional[str] = None

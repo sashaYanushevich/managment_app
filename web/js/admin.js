@@ -11,6 +11,8 @@ $(document).ready(function () {
     const userForm = $('#user-form');
     const modalTitle = $('#modal-title');
     const closeButton = $('.close-button');
+    const changePasswordModal = $('#change-password-modal');
+    const changePasswordForm = $('#change-password-form');
 
     // Функция для загрузки пользователей
     function loadUsers(query = '') {
@@ -29,12 +31,22 @@ $(document).ready(function () {
                         <tr>
                             <td>${user.id}</td>
                             <td>${user.login}</td>
-                            <td>${user.email || ''}</td>
                             <td>${user.name || ''}</td>
+                            <td>${user.email || ''}</td>
                             <td>${user.is_active ? 'Active' : 'Deactive'}</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary edit-user" data-id="${user.id}"><i class="fas fa-edit"></i></button>
-                                <button class="btn btn-sm btn-danger delete-user" data-id="${user.id}"><i class="fas fa-trash"></i></button>
+                            <td class="d-flex gap-1">
+                                <button class="btn btn-sm btn-primary edit-user" data-id="${user.id}" style="width: 32px; height: 32px; padding: 0;">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-warning change-password" data-id="${user.id}" style="width: 32px; height: 32px; padding: 0;">
+                                    <i class="fas fa-key"></i>
+                                </button>
+                                <button class="btn btn-sm btn-info import-data" data-id="${user.id}" style="width: 32px; height: 32px; padding: 0;">
+                                    <i class="fas fa-file-import"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger delete-user" data-id="${user.id}" style="width: 32px; height: 32px; padding: 0;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </td>
                         </tr>
                     `;
@@ -52,6 +64,36 @@ $(document).ready(function () {
                     if (confirm('Вы уверены, что хотите удалить пользователя?')) {
                         deleteUser(userId);
                     }
+                });
+
+                // Add click handlers for the buttons
+                $('.change-password').on('click', function() {
+                    const userId = $(this).data('id');
+                    openChangePasswordModal(userId);
+                });
+
+                $('.import-data').on('click', function() {
+                    const userId = $(this).data('id');
+                    $('#import-user-id').val(userId);
+                    
+                    // Устанавливаем пример данных с правильными отступами
+                    const exampleData = 
+`package_id: pkg316babc0
+start_date: 2024-12-04
+expiry: 2025-12-04
+max_modems: 100
+servers:
+  - name: nim
+    modems: 50
+    MachineData: n_cpu=2,rootfs=51340,mem=3798,bios_uuid=03aa02fc-0414-059d-e006-2a0700080009
+  - name: nim2
+    modems: 40
+    MachineData: n_cpu=2,rootfs=51340,mem=3798,bios_uuid=03aa02fc-0414-059d-e006-2a0700080009`;
+
+                    // Устанавливаем данные в поле ввода
+                    $('#import-data').val(exampleData);
+                    
+                    $('#import-modal').css('display', 'block');
                 });
             }
         });
@@ -184,4 +226,107 @@ $(document).ready(function () {
             closeUserModal();
         }
     });
+
+    // Add new function to handle opening the change password modal
+    function openChangePasswordModal(userId) {
+        $('#password-user-id').val(userId);
+        changePasswordModal.css('display', 'block');
+    }
+
+    // Add form handler for password change
+    changePasswordForm.on('submit', function(e) {
+        e.preventDefault();
+        const userId = $('#password-user-id').val();
+        const newPassword = $('#new-password').val();
+
+        $.ajax({
+            url: `http://188.124.59.90:8000/api/v1/users/${userId}/change-password`,
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            },
+            data: JSON.stringify({
+                new_password: newPassword
+            }),
+            success: function() {
+                alert('Password changed successfully');
+                changePasswordModal.css('display', 'none');
+                changePasswordForm[0].reset();
+            },
+            error: function(xhr, status, error) {
+                console.error('Error changing password:', error);
+                alert('Error changing password');
+            }
+        });
+    });
+
+    // Add close handler for the change password modal
+    changePasswordModal.find('.close-button').on('click', function() {
+        changePasswordModal.css('display', 'none');
+    });
+
+    $(window).on('click', function(e) {
+        if ($(e.target).is(changePasswordModal)) {
+            changePasswordModal.css('display', 'none');
+        }
+    });
+
+    // Добавляем обработчик закрытия модального окна импорта
+    $(document).on('click', '#import-modal .close-button', function() {
+        $('#import-modal').css('display', 'none');
+    });
+
+    // Очищаем поле ввода при закрытии модального окна
+    $('#import-modal').on('hidden.bs.modal', function () {
+        $('#import-data').val('');
+    });
+
+    $('#import-form').on('submit', function(e) {
+        e.preventDefault();
+        
+        const userId = $('#import-user-id').val();
+        let importData = $('#import-data').val();
+        
+        // Убедимся, что у нас есть данные
+        if (!importData.trim()) {
+            alert('Please enter YAML data');
+            return;
+        }
+
+        // Очищаем данные от лишних пробелов и табуляций в начале строк, сохраняя отступы
+        importData = importData.split('\n')
+            .map(line => {
+                const trimmed = line.trimEnd(); // Удаляем только пробелы в конце
+                return trimmed;
+            })
+            .filter(line => line) // Удаляем пустые строки
+            .join('\n');
+
+        console.log('Sending data:', importData); // Для отладки
+
+        $.ajax({
+            url: `http://188.124.59.90:8000/api/v1/users/${userId}/import`,
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            },
+            data: JSON.stringify({
+                import_data: importData
+            }),
+            success: function(response) {
+                alert('Data imported successfully');
+                $('#import-modal').css('display', 'none');
+                $('#import-data').val(''); // Очищаем поле ввода
+                loadUsers(); // Обновляем список пользователей
+            },
+            error: function(xhr, status, error) {
+                console.error('Import error:', xhr.responseJSON); // Для отладки
+                alert('Error importing data: ' + (xhr.responseJSON?.detail || error));
+            }
+        });
+    });
 });
+
+

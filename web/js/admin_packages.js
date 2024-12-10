@@ -59,46 +59,51 @@ $(document).ready(function () {
 
     // Function to load packages
     function loadPackages() {
-        $.ajax({
-            url: 'http://188.124.59.90:8000/api/v1/packages/',
+        fetch('http://188.124.59.90:8000/api/v1/packages/', {
             headers: {
                 'Authorization': 'Bearer ' + token
-            },
-            success: function (packages) {
-                calculateFreeModems(packages);
-                packagesTableBody.empty();
-                packages.forEach(package => {
-                    const row = `
-                        <tr>
-                            <td>${package.id}</td>
-                            <td>${package.customer_id}</td>
-                            <td>${package.comment || ''}</td>
-                            <td>${package.max_modems}</td>
-                            <td>${package.free_modems}</td>
-                            <td>${package.start_date}</td>
-                            <td>${package.expiry}</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary edit-package" data-id="${package.id}"><i class="fas fa-edit"></i></button>
-                                <button class="btn btn-sm btn-danger delete-package" data-id="${package.id}"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-                    `;
-                    packagesTableBody.append(row);
-                });
-
-                // Add handlers for edit and delete buttons
-                $('.edit-package').on('click', function () {
-                    const packageId = $(this).data('id');
-                    openPackageModal(packageId);
-                });
-
-                $('.delete-package').on('click', function () {
-                    const packageId = $(this).data('id');
-                    if (confirm('Are you sure you want to delete this package?')) {
-                        deletePackage(packageId);
-                    }
-                });
             }
+        })
+        .then(response => response.json())
+        .then(packages => {
+            calculateFreeModems(packages);
+            packagesTableBody.empty();
+            packages.forEach(pkg => {
+                const userInfo = pkg.customer ? `${pkg.customer.login} [${pkg.customer.name || ''}]` : '';
+                const row = `
+                    <tr>
+                        <td>${pkg.id}</td>
+                        <td>${userInfo}</td>
+                        <td>${pkg.comment || ''}</td>
+                        <td>${pkg.max_modems}</td>
+                        <td>${pkg.free_modems}</td>
+                        <td>${new Date(pkg.start_date).toLocaleDateString()}</td>
+                        <td>${pkg.expiry ? new Date(pkg.expiry).toLocaleDateString() : ''}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary edit-package" data-id="${pkg.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger delete-package" data-id="${pkg.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                packagesTableBody.append(row);
+            });
+
+            // Add click handlers for the buttons
+            $('.edit-package').on('click', function() {
+                const packageId = $(this).data('id');
+                openPackageModal(packageId);
+            });
+
+            $('.delete-package').on('click', function() {
+                const packageId = $(this).data('id');
+                if (confirm('Are you sure you want to delete this package?')) {
+                    deletePackage(packageId);
+                }
+            });
         });
     }
 
@@ -143,19 +148,40 @@ $(document).ready(function () {
 
     // Function to delete a package
     function deletePackage(packageId) {
-        fetch(`http://188.124.59.90:8000/api/v1/packages/${packageId}`, {
-            method: 'DELETE',
+        // First get all servers for this package
+        fetch(`http://188.124.59.90:8000/api/v1/servers/by-package/${packageId}`, {
             headers: {
                 'Authorization': 'Bearer ' + token
             }
         })
-        .then(() => {
-            alert('Package deleted');
-            loadPackages();
+        .then(response => response.json())
+        .then(servers => {
+            if (confirm(`This will delete the package and ${servers.length} associated servers. Are you sure?`)) {
+                // Delete the package (backend will handle server deletion)
+                return fetch(`http://188.124.59.90:8000/api/v1/packages/${packageId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+            }
+            return Promise.reject('Cancelled by user');
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Package and associated servers deleted successfully');
+                loadPackages();
+            } else {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.detail || 'Error deleting package');
+                });
+            }
         })
         .catch(error => {
-            console.error('Error deleting package:', error);
-            alert('Error deleting package');
+            if (error.message !== 'Cancelled by user') {
+                console.error('Error deleting package:', error);
+                alert('Error deleting package: ' + error.message);
+            }
         });
     }
 

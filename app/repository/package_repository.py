@@ -20,7 +20,10 @@ class CRUDPackage:
     async def get_multi(self, db: AsyncSession, skip: int = 0, limit: int = 100) -> List[Package]:
         result = await db.execute(
             select(Package)
-            .options(selectinload(Package.servers))
+            .options(
+                selectinload(Package.servers),
+                selectinload(Package.customer)
+            )
             .offset(skip)
             .limit(limit)
         )

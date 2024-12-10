@@ -4,21 +4,30 @@ from typing import List, Any
 from fastapi import BackgroundTasks, Body
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from yaml import safe_load
+from datetime import datetime
 
 from app import schemas, repository, models
 from app.api import deps
 from app.core.send_mail import send_reset_password_email
 from app.db.session import get_db
 from app.core.security import get_password_hash
+from app.schemas.package import ImportData
 
 router = APIRouter()
 
 @router.get("/", response_model=List[schemas.User])
 async def read_users(
     db: AsyncSession = Depends(get_db),
+    skip: int = 0,
+    limit: int = 100,
+    search: str = "",
     current_user: models.User = Depends(deps.get_current_active_admin),
 ) -> Any:
-    users = await repository.user.get_multi(db)
+    """
+    Retrieve users with optional search and pagination.
+    """
+    users = await repository.user.get_multi(db, skip=skip, limit=limit)
     return users
 
 
@@ -175,3 +184,133 @@ async def change_password(
     user_in = schemas.UserUpdate(email=current_user.email, name=current_user.name, password=new_password)
     await repository.user.update(db, db_obj=current_user, obj_in=user_in)
     return {"msg": "Password updated successfully"}
+
+@router.post("/{user_id}/change-password")
+async def admin_change_user_password(
+    user_id: int,
+    *,
+    db: AsyncSession = Depends(get_db),
+    new_password: str = Body(..., embed=True),
+    current_user: models.User = Depends(deps.get_current_active_admin),
+) -> Any:
+    """
+    Admin endpoint to change any user's password.
+    """
+    user = await repository.user.get(db, id=user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    hashed_password = get_password_hash(new_password)
+    user_in = schemas.UserUpdate(
+        email=user.email,
+        name=user.name,
+        login=user.login,
+        password=hashed_password
+    )
+    await repository.user.update(db, db_obj=user, obj_in=user_in)
+    return {"msg": "Password updated successfully"}
+
+@router.post("/{user_id}/import")
+async def import_user_data(
+    user_id: int,
+    import_data: ImportData,
+    db: AsyncSession = Depends(get_db),
+    current_user: models.User = Depends(deps.get_current_active_admin),
+) -> Any:
+    """Import user package and server data from YAML"""
+    try:
+        # Parse YAML data with safe_load
+        yaml_str = import_data.import_data.strip()
+        data = safe_load(yaml_str)
+        
+        if not data or not isinstance(data, dict):
+            raise HTTPException(status_code=400, detail="Invalid YAML data structure")
+            
+        # Validate required fields
+        required_fields = ['package_id', 'start_date', 'expiry', 'max_modems', 'servers']
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Missing required fields: {', '.join(missing_fields)}"
+            )
+        
+        # Create package
+        try:
+            package_create = schemas.PackageCreate(
+                customer_id=user_id,
+                comment=str(data['package_id']),
+                max_modems=int(data['max_modems']),
+                start_date=datetime.strptime(str(data['start_date']), '%Y-%m-%d'),
+                expiry=datetime.strptime(str(data['expiry']), '%Y-%m-%d')
+            )
+        except ValueError as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid package data format: {str(e)}"
+            )
+        
+        package = await repository.package.create(db, obj_in=package_create)
+        
+        # Validate servers data
+        servers = data.get('servers', [])
+        if not isinstance(servers, list):
+            raise HTTPException(
+                status_code=400,
+                detail="Servers must be a list"
+            )
+            
+        total_modems = 0
+        for server_data in servers:
+            if not isinstance(server_data, dict):
+                raise HTTPException(status_code=400, detail="Each server must be a dictionary")
+                
+            required_server_fields = ['name', 'modems', 'MachineData']
+            missing_server_fields = [field for field in required_server_fields if field not in server_data]
+            if missing_server_fields:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Server missing required fields: {', '.join(missing_server_fields)}"
+                )
+                
+            total_modems += int(server_data['modems'])
+            
+            try:
+                machine_data = str(server_data['MachineData'])
+                parsed_machine = dict(item.split('=') for item in machine_data.split(','))
+                
+                server_create = schemas.ServerCreateDB(
+                    name=str(server_data['name']),
+                    max_modems=int(server_data['modems']),
+                    package_id=package.id,
+                    machine_data=machine_data
+                )
+                
+                await repository.server.create(db, obj_in=server_create)
+            except Exception as e:
+                await db.rollback()
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Error creating server {server_data.get('name', 'unknown')}: {str(e)}"
+                )
+        
+        # Verify total modems doesn't exceed package max_modems
+        if total_modems > int(data['max_modems']):
+            await db.rollback()
+            raise HTTPException(
+                status_code=400,
+                detail=f"Total server modems ({total_modems}) exceeds package max_modems ({data['max_modems']})"
+            )
+        
+        await db.commit()
+        return {"message": "Data imported successfully"}
+        
+    except HTTPException:
+        await db.rollback()
+        raise
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Import failed: {str(e)}\nPlease check your YAML format"
+        )

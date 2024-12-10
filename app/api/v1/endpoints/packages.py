@@ -8,6 +8,7 @@ from sqlalchemy.future import select
 
 from app import schemas, repository, models
 from app.api import deps
+from app.core import external_api
 from app.db.session import get_db
 
 router = APIRouter()
@@ -102,15 +103,49 @@ async def update_package(
 
 @router.delete("/{package_id}", response_model=schemas.Package)
 async def delete_package(
-    package_id: int,
+    *,
     db: AsyncSession = Depends(get_db),
-    current_user: models.User = Depends(deps.get_current_active_admin),
+    package_id: int,
+    current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
-    Удалить пакет.
+    Delete package and all associated servers.
     """
-    package = await repository.package.get(db, id=package_id)
+    # Get package with relationships loaded
+    query = (
+        select(models.Package)
+        .options(
+            selectinload(models.Package.customer),
+            selectinload(models.Package.servers)
+        )
+        .filter(models.Package.id == package_id)
+    )
+    result = await db.execute(query)
+    package = result.scalar_one_or_none()
+    
     if not package:
-        raise HTTPException(status_code=404, detail="Пакет не найден")
+        raise HTTPException(status_code=404, detail="Package not found")
+
+    # Get all servers associated with this package
+    servers = await repository.server.get_multi_by_package(
+        db, 
+        package_id=package_id,
+        customer_id=current_user.id
+    )
+
+    # Revoke licenses for all servers
+    for server in servers:
+        try:
+            if server.license_hash:
+                await external_api.revoke_license(license_hash=server.license_hash)
+        except Exception as e:
+            print(f"Error revoking license for server {server.id}: {str(e)}")
+
+    # Delete all servers
+    for server in servers:
+        await repository.server.remove(db, id=server.id)
+
+    # Finally delete the package
     package = await repository.package.remove(db, id=package_id)
+    
     return package

@@ -38,28 +38,36 @@ $(document).ready(function () {
     loadUsers();
 
     // Function to load packages for the dropdown
-    function loadPackages() {
-        const userId = userSelect.val();
+    function loadPackages(userId) {
         $.ajax({
-            url: `http://188.124.59.90:8000/api/v1/packages/user/${userId}`,
+            url: 'http://188.124.59.90:8000/api/v1/packages/',
             headers: {
                 'Authorization': 'Bearer ' + token
             },
             success: function (packages) {
                 packageSelect.empty();
                 packages.forEach(pkg => {
-                    packageSelect.append(`<option value="${pkg.id}">${pkg.id} - ${pkg.comment || ''}</option>`);
+                    if (!userId || pkg.customer_id === parseInt(userId)) {
+                        const usedModems = pkg.servers ? pkg.servers.reduce((sum, server) => sum + server.max_modems, 0) : 0;
+                        const freeModems = pkg.max_modems - usedModems;
+                        packageSelect.append(`<option value="${pkg.id}" data-free="${freeModems}">${pkg.comment}</option>`);
+                    }
                 });
-            },
-            error: function (error) {
-                console.error('Error loading packages:', error);
+                updatePackageFreeModems();
             }
         });
     }
 
-    // Load packages when the user changes
-    userSelect.on('change', function () {
-        loadPackages();
+    // Add new function to update free modems display
+    function updatePackageFreeModems() {
+        const selectedOption = packageSelect.find('option:selected');
+        const freeModems = selectedOption.data('free');
+        $('#admin-package-free-modems').text(`Free modems: ${freeModems}`);
+    }
+
+    // Add event listener for package select change
+    packageSelect.on('change', function() {
+        updatePackageFreeModems();
     });
 
     // Function to load servers
@@ -244,10 +252,16 @@ $(document).ready(function () {
                     closeServerModal();
                     alert('Server data saved');
                     loadServers();
-                } else {
-                    closeServerModal();
-                    alert('Server data saved');
-                    loadServers();
+                }else {
+                    return response.json().then(errorData => {
+                        if (errorData.detail === 'Превышен лимит модемов в пакете.') {
+                            alert('max_modems is over limit, server is not created');
+                        } else {
+                            closeServerModal();
+                            alert('Server data saved');
+                            loadServers();
+                        }
+                    });
                 }
             })
             .catch(error => {

@@ -142,8 +142,7 @@ iframe {
     background-color: #0056b3;
 }
 
-/* Стили для модальных окон */
-
+/* ��тили для модальных окон */
 .modal {
     display: none; /* Скрыто по умолчанию */
     position: fixed;
@@ -454,4 +453,38 @@ table tbody tr:hover {
         width: 100%;
         margin-bottom: 10px;
     }
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #000;
+}
+
+.btn-warning:hover {
+    background-color: #ffca2c;
+    border-color: #ffc720;
+    color: #000;
+}
+
+.change-password {
+    margin: 0 5px;
+}
+
+.badge.bg-info {
+    font-size: 0.9em;
+    padding: 0.4em 0.8em;
+    margin-left: 10px;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.align-items-center {
+    align-items: center;
+}
+
+.ms-2 {
+    margin-left: 0.5rem;
 }

@@ -16,14 +16,15 @@
             <input type="text" id="search-input" class="form-control" placeholder="Search...">
             <button id="search-button" class="btn btn-primary"><i class="fas fa-search"></i></button>
             <button id="add-user" class="btn btn-success"><i class="fas fa-plus"></i> Add User</button>
+            <button id="import-data" class="btn btn-info"><i class="fas fa-file-import"></i> Import Data</button>
         </div>
         <table id="users-table" class="table table-striped">
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>Login</th>
-                    <th>Email</th>
                     <th>Name</th>
+                    <th>Email</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
@@ -43,10 +44,6 @@
                         <input type="text" id="login" name="login" required>
                     </div>
                     <div class="form-group">
-                        <label for="password">Password:</label>
-                        <input type="password" id="password" name="password">
-                    </div>
-                    <div class="form-group">
                         <label for="email">Email:</label>
                         <input type="email" id="email" name="email">
                     </div>
@@ -62,6 +59,46 @@
                         </select>
                     </div>
                     <button type="submit" class="btn">Save</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Add new modal for password change -->
+        <div id="change-password-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <h2>Change User Password</h2>
+                <form id="change-password-form">
+                    <input type="hidden" id="password-user-id" name="password-user-id">
+                    <div class="form-group">
+                        <label for="new-password">New Password:</label>
+                        <input type="password" id="new-password" name="new-password" required>
+                    </div>
+                    <button type="submit" class="btn">Change Password</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Add this modal at the bottom of the container-fluid div -->
+        <div id="import-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <h2>Import Data</h2>
+                <form id="import-form">
+                    <input type="hidden" id="import-user-id" name="import-user-id">
+                    <div class="form-group">
+                        <label for="import-data">YAML Data:</label>
+                        <textarea id="import-data" name="import-data" rows="10" required 
+                            placeholder="package_id: pkg316babc0
+start_date: 2024-12-04
+expiry: 2025-12-04
+max_modems: 100
+servers:
+  - name: nim
+    modems: 50
+    MachineData: n_cpu=2,rootfs=51340,mem=3798,bios_uuid=03aa02fc-0414-059d-e006-2a0700080009"></textarea>
+                    </div>
+                    <button type="submit" class="btn">Import</button>
                 </form>
             </div>
         </div>

@@ -10,6 +10,7 @@ class Server(Base):
     max_modems = Column(Integer, nullable=False)
     package_id = Column(Integer, ForeignKey('package.id'), nullable=False)
     license_hash = Column(String(100), nullable=True)
+    setup_link = Column(String(255), nullable=True)
     machine_data = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
