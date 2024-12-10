@@ -111,12 +111,12 @@ async def delete_package(
     """
     Delete package and all associated servers.
     """
-    # Get package with relationships loaded
+    # Get package with all necessary relationships loaded
     query = (
         select(models.Package)
         .options(
             selectinload(models.Package.customer),
-            selectinload(models.Package.servers)
+            selectinload(models.Package.servers).selectinload(models.Server.package)  # Load server.package relationship
         )
         .filter(models.Package.id == package_id)
     )
@@ -126,12 +126,8 @@ async def delete_package(
     if not package:
         raise HTTPException(status_code=404, detail="Package not found")
 
-    # Get all servers associated with this package
-    servers = await repository.server.get_multi_by_package(
-        db, 
-        package_id=package_id,
-        customer_id=current_user.id
-    )
+    # Use the already loaded servers from package relationship
+    servers = package.servers
 
     # Revoke licenses for all servers
     for server in servers:
