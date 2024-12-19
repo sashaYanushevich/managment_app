@@ -201,17 +201,21 @@ async def admin_change_user_password(
     """
     user = await repository.user.get(db, id=user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
     
     hashed_password = get_password_hash(new_password)
-    user_in = schemas.UserUpdate(
-        email=user.email,
-        name=user.name,
-        login=user.login,
-        password=hashed_password
-    )
-    await repository.user.update(db, db_obj=user, obj_in=user_in)
-    return {"msg": "Password updated successfully"}
+    # Обновляем только пароль, оставляя остальные поля без изменений
+    user_in = schemas.UserUpdate(password=hashed_password)
+    
+    try:
+        updated_user = await repository.user.update(db, db_obj=user, obj_in=user_in)
+        await db.commit()  # Явно фиксируем изменения
+        if not updated_user:
+            raise HTTPException(status_code=400, detail="Ошибка при обновлении пароля")
+        return {"msg": "Пароль успешно обновлен"}
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=f"Ошибка при обновлении пароля: {str(e)}")
 
 @router.post("/{user_id}/import")
 async def import_user_data(
