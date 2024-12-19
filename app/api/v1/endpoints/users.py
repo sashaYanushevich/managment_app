@@ -3,6 +3,7 @@ import shutil
 from typing import List, Any
 from fastapi import BackgroundTasks, Body
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 from yaml import safe_load
 from datetime import datetime
@@ -211,21 +212,18 @@ async def admin_change_user_password(
         
         # Хешируем новый пароль
         hashed_password = get_password_hash(new_password)
-        logger.debug(f"Generated hash: {hashed_password[:20]}...")
         
-        # Создаем объект обновления
-        user_in = schemas.UserUpdate(password=hashed_password)
+        # Создаем объект обновления с явным указанием hashed_password
+        user_in_dict = {
+            "hashed_password": hashed_password
+        }
         
-        # Обновляем пароль
-        updated_user = await repository.user.update(db, db_obj=user, obj_in=user_in)
-        if not updated_user:
-            raise HTTPException(status_code=400, detail="Ошибка при обновлении пароля")
-        
-        # Проверяем, что пароль действительно обновился
-        user_after_update = await repository.user.get(db, id=user_id)
-        if user_after_update.hashed_password != hashed_password:
-            logger.error("Password hash mismatch after update")
-            raise HTTPException(status_code=500, detail="Ошибка при проверке обновления пароля")
+        # Обновляем пароль напрямую в базе
+        await db.execute(
+            update(models.User)
+            .where(models.User.id == user_id)
+            .values(hashed_password=hashed_password)
+        )
         
         await db.commit()
         logger.info(f"Password successfully updated for user {user.login}")
