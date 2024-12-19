@@ -141,8 +141,11 @@ async def reset_password(
     user = await repository.user.get_by_email(db, email=email)
     if not user:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
-    user_in = schemas.UserUpdate(password=new_password)
-    await repository.update(db, db_obj=user, obj_in=user_in)
+    
+    # Хешируем пароль перед сохранением
+    hashed_password = get_password_hash(new_password)
+    user_in = schemas.UserUpdate(password=hashed_password)
+    await repository.user.update(db, db_obj=user, obj_in=user_in)
     return {"msg": "Пароль успешно изменен"}
 
 @router.post("/pr_delete")

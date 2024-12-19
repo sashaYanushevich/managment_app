@@ -1,4 +1,4 @@
-$(document).ready(function () {
+$(document).ready(function() {
     const token = localStorage.getItem('token');
     if (!token) {
         alert('Authentication required');
@@ -24,7 +24,7 @@ $(document).ready(function () {
             data: {
                 search: query
             },
-            success: function (users) {
+            success: function(users) {
                 usersTableBody.empty();
                 users.forEach(user => {
                     const row = `
@@ -54,12 +54,12 @@ $(document).ready(function () {
                 });
 
                 // Добавляем обработчики для кнопок редактирования и удаления
-                $('.edit-user').on('click', function () {
+                $('.edit-user').on('click', function() {
                     const userId = $(this).data('id');
                     openUserModal(userId);
                 });
 
-                $('.delete-user').on('click', function () {
+                $('.delete-user').on('click', function() {
                     const userId = $(this).data('id');
                     if (confirm('Вы уверены, что хотите удалить пользователя?')) {
                         deleteUser(userId);
@@ -75,10 +75,10 @@ $(document).ready(function () {
                 $('.import-data').on('click', function() {
                     const userId = $(this).data('id');
                     $('#import-user-id').val(userId);
-                    
+
                     // Устанавливаем пример данных с правильными отступами
-                    const exampleData = 
-`package_id: pkg316babc0
+                    const exampleData =
+                        `package_id: pkg316babc0
 start_date: 2024-12-04
 expiry: 2025-12-04
 max_modems: 100
@@ -92,7 +92,7 @@ servers:
 
                     // Устанавливаем данные в поле ввода
                     $('#import-data').val(exampleData);
-                    
+
                     $('#import-modal').css('display', 'block');
                 });
             }
@@ -100,7 +100,7 @@ servers:
     }
 
     // Поиск
-    $('#search-button').on('click', function () {
+    $('#search-button').on('click', function() {
         const query = $('#search-input').val();
         loadUsers(query);
     });
@@ -110,38 +110,45 @@ servers:
 
     function openUserModal(userId = null) {
         if (userId) {
-            // Edit user
+            // Редактирование пользователя
             modalTitle.text('Edit User');
+            // Скрываем поле пароля и убираем required
+            $('#password-group').hide();
+            $('#password').prop('required', false);
+
             fetch(`http://188.124.59.90:8000/api/v1/users/get?id=${userId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'Content-Type': 'application/json',
-                }
-            })
-            .then(response => response.json())
-            .then(user => {
-                userForm.find('[name="user-id"]').val(user.id);
-                userForm.find('[name="login"]').val(user.login); // Set login field for editing
-                userForm.find('[name="email"]').val(user.email || '');
-                userForm.find('[name="name"]').val(user.name || '');
-                userForm.find('[name="status"]').val(user.is_active ? 'active' : 'inactive'); // Set status correctly
-                userForm.find('[name="password"]').val(''); // Clear password field
-            });
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(user => {
+                    userForm.find('[name="user-id"]').val(user.id);
+                    userForm.find('[name="login"]').val(user.login); // Set login field for editing
+                    userForm.find('[name="email"]').val(user.email || '');
+                    userForm.find('[name="name"]').val(user.name || '');
+                    userForm.find('[name="status"]').val(user.is_active ? 'active' : 'inactive'); // Set status correctly
+                    userForm.find('[name="password"]').val(''); // Clear password field
+                });
         } else {
-            // Add new user
+            // Добавление нового пользователя
             modalTitle.text('Add User');
             userForm.trigger('reset');
             userForm.find('[name="user-id"]').val('');
-            userForm.find('[name="status"]').val('active'); // Set default status for new user
+            userForm.find('[name="status"]').val('active');
+            // Показываем поле пароля и делаем его обязательным
+            $('#password-group').show();
+            $('#password').prop('required', true);
         }
         userModal.css('display', 'block');
     }
-    
+
     // Handling form submission to ensure login is set only for new users
     userForm.on('submit', function(e) {
         e.preventDefault();
-    
+
         const userId = userForm.find('[name="user-id"]').val();
         const data = {
             login: userForm.find('[name="login"]').val(),
@@ -149,47 +156,47 @@ servers:
             name: userForm.find('[name="name"]').val(),
             is_active: userForm.find('[name="status"]').val() === 'active' // Correctly set status
         };
-    
+
         if (!userId) {
             // Include login only when creating a new user
             data.login = userForm.find('[name="login"]').val();
         }
-    
+
         if (userForm.find('[name="password"]').val()) {
             data.password = userForm.find('[name="password"]').val();
         }
-    
+
         const method = userId ? 'PUT' : 'POST';
         const url = userId ? `http://188.124.59.90:8000/api/v1/users/${userId}` : 'http://188.124.59.90:8000/api/v1/users/';
-    
+
         fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => {
-            if (response.ok) {
-                return response.json();
-            } else {
-                return response.json().then(errorData => {
-                    throw new Error(errorData.detail || 'Error saving data');
-                });
-            }
-        })
-        .then(userData => {
-            closeUserModal();
-            alert('User data saved');
-            loadUsers();
-        })
-        .catch(error => {
-            console.error('Error saving user:', error);
-            alert(error.message);
-        });
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.detail || 'Error saving data');
+                    });
+                }
+            })
+            .then(userData => {
+                closeUserModal();
+                alert('User data saved');
+                loadUsers();
+            })
+            .catch(error => {
+                console.error('Error saving user:', error);
+                alert(error.message);
+            });
     });
-    
+
 
     // Функция для закрытия модального окна
     function closeUserModal() {
@@ -199,19 +206,19 @@ servers:
     // Function to delete a user
     function deleteUser(userId) {
         fetch(`http://188.124.59.90:8000/api/v1/users/${userId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': 'Bearer ' + token
-            }
-        })
-        .then(() => {
-            alert('User deleted');
-            loadUsers();
-        })
-        .catch(error => {
-            console.error('Error deleting user:', error);
-            alert('Error deleting user');
-        });
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(() => {
+                alert('User deleted');
+                loadUsers();
+            })
+            .catch(error => {
+                console.error('Error deleting user:', error);
+                alert('Error deleting user');
+            });
     }
 
     // Обработчики для открытия и закрытия модального окна
@@ -278,16 +285,16 @@ servers:
     });
 
     // Очищаем поле ввода при закрытии модального окна
-    $('#import-modal').on('hidden.bs.modal', function () {
+    $('#import-modal').on('hidden.bs.modal', function() {
         $('#import-data').val('');
     });
 
     $('#import-form').on('submit', function(e) {
         e.preventDefault();
-        
+
         const userId = $('#import-user-id').val();
         let importData = $('#import-data').val();
-        
+
         // Убедимся, что у нас есть данные
         if (!importData.trim()) {
             alert('Please enter YAML data');
@@ -323,10 +330,8 @@ servers:
             },
             error: function(xhr, status, error) {
                 console.error('Import error:', xhr.responseJSON); // Для отладки
-                alert('Error importing data: ' + (xhr.responseJSON?.detail || error));
+                alert('Error importing data: ' + (xhr.responseJSON ? xhr.responseJSON.detail : error));
             }
         });
     });
 });
-
-
