@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from yaml import safe_load
 from datetime import datetime
+import logging
 
 from app import schemas, repository, models
 from app.api import deps
@@ -15,6 +16,7 @@ from app.core.security import get_password_hash
 from app.schemas.package import ImportData
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 @router.get("/", response_model=List[schemas.User])
 async def read_users(
@@ -199,22 +201,40 @@ async def admin_change_user_password(
     """
     Admin endpoint to change any user's password.
     """
-    user = await repository.user.get(db, id=user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="Пользователь не найден")
-    
-    hashed_password = get_password_hash(new_password)
-    # Обновляем только пароль, оставляя остальные поля без изменений
-    user_in = schemas.UserUpdate(password=hashed_password)
-    
     try:
+        # Получаем пользователя
+        user = await repository.user.get(db, id=user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="Пользователь не найден")
+        
+        logger.info(f"Changing password for user {user.login}")
+        
+        # Хешируем новый пароль
+        hashed_password = get_password_hash(new_password)
+        logger.debug(f"Generated hash: {hashed_password[:20]}...")
+        
+        # Создаем объект обновления
+        user_in = schemas.UserUpdate(password=hashed_password)
+        
+        # Обновляем пароль
         updated_user = await repository.user.update(db, db_obj=user, obj_in=user_in)
-        await db.commit()  # Явно фиксируем изменения
         if not updated_user:
             raise HTTPException(status_code=400, detail="Ошибка при обновлении пароля")
+        
+        # Проверяем, что пароль действительно обновился
+        user_after_update = await repository.user.get(db, id=user_id)
+        if user_after_update.hashed_password != hashed_password:
+            logger.error("Password hash mismatch after update")
+            raise HTTPException(status_code=500, detail="Ошибка при проверке обновления пароля")
+        
+        await db.commit()
+        logger.info(f"Password successfully updated for user {user.login}")
+        
         return {"msg": "Пароль успешно обновлен"}
+        
     except Exception as e:
         await db.rollback()
+        logger.error(f"Error changing password: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Ошибка при обновлении пароля: {str(e)}")
 
 @router.post("/{user_id}/import")
