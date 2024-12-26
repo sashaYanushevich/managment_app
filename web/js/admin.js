@@ -75,24 +75,6 @@ $(document).ready(function() {
                 $('.import-data').on('click', function() {
                     const userId = $(this).data('id');
                     $('#import-user-id').val(userId);
-
-                    // Устанавливаем пример данных с правильными отступами
-                    const exampleData =
-                        `package_id: pkg316babc0
-start_date: 2024-12-04
-expiry: 2025-12-04
-max_modems: 100
-servers:
-  - name: nim
-    modems: 50
-    MachineData: n_cpu=2,rootfs=51340,mem=3798,bios_uuid=03aa02fc-0414-059d-e006-2a0700080009
-  - name: nim2
-    modems: 40
-    MachineData: n_cpu=2,rootfs=51340,mem=3798,bios_uuid=03aa02fc-0414-059d-e006-2a0700080009`;
-
-                    // Устанавливаем данные в поле ввода
-                    $('#import-data').val(exampleData);
-
                     $('#import-modal').css('display', 'block');
                 });
             }

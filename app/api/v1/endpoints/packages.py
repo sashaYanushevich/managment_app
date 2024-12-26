@@ -73,7 +73,14 @@ async def read_package(
     db: AsyncSession = Depends(get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
 ):
-    query = select(models.Package).options(selectinload(models.Package.servers)).filter(models.Package.id == package_id)
+    query = (
+        select(models.Package)
+        .options(
+            selectinload(models.Package.servers),
+            selectinload(models.Package.customer)
+        )
+        .filter(models.Package.id == package_id)
+    )
     result = await db.execute(query)
     package = result.scalar_one_or_none()
 
