@@ -277,13 +277,20 @@ $(document).ready(function() {
         const userId = $('#import-user-id').val();
         let importData = $('#import-data').val();
 
-        // Убираем проверку на пустые данные, так как она может неправильно работать с YAML
-        if (!importData) {
+        console.log('Отправляемые данные:', importData); // Добавляем логирование
+
+        if (!importData.trim()) {
             alert('Please enter YAML data');
             return;
         }
 
-        // Отправляем данные как есть, без дополнительной обработки
+        // Попробуем отправить данные в другом формате
+        const requestData = {
+            import_data: importData.trim()
+        };
+
+        console.log('Request payload:', requestData); // Логируем финальный объект запроса
+
         $.ajax({
             url: `http://188.124.59.90:8000/api/v1/users/${userId}/import`,
             method: 'POST',
@@ -291,17 +298,20 @@ $(document).ready(function() {
                 'Authorization': 'Bearer ' + token,
                 'Content-Type': 'application/json'
             },
-            data: JSON.stringify({
-                import_data: importData
-            }),
+            data: JSON.stringify(requestData),
             success: function(response) {
+                console.log('Success response:', response); // Логируем успешный ответ
                 alert('Data imported successfully');
                 $('#import-modal').css('display', 'none');
                 $('#import-data').val('');
                 loadUsers();
             },
             error: function(xhr, status, error) {
-                console.error('Import error:', xhr.responseJSON);
+                console.error('Import error:', {
+                    status: xhr.status,
+                    response: xhr.responseJSON,
+                    error: error
+                }); // Расширенное логирование ошибки
                 alert('Error importing data: ' + (xhr.responseJSON ? xhr.responseJSON.detail : error));
             }
         });
