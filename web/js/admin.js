@@ -277,19 +277,18 @@ $(document).ready(function() {
         const userId = $('#import-user-id').val();
         let importData = $('#import-data').val();
 
-        console.log('Отправляемые данные:', importData); // Добавляем логирование
+        console.log('Отправляемые данные:', importData);
 
-        if (!importData.trim()) {
+        if (!importData) {
             alert('Please enter YAML data');
             return;
         }
 
-        // Попробуем отправить данные в другом формате
         const requestData = {
-            import_data: importData.trim()
+            import_data: importData
         };
 
-        console.log('Request payload:', requestData); // Логируем финальный объект запроса
+        console.log('Request payload:', requestData);
 
         $.ajax({
             url: `http://188.124.59.90:8000/api/v1/users/${userId}/import`,
@@ -300,7 +299,7 @@ $(document).ready(function() {
             },
             data: JSON.stringify(requestData),
             success: function(response) {
-                console.log('Success response:', response); // Логируем успешный ответ
+                console.log('Success response:', response);
                 alert('Data imported successfully');
                 $('#import-modal').css('display', 'none');
                 $('#import-data').val('');
@@ -311,7 +310,7 @@ $(document).ready(function() {
                     status: xhr.status,
                     response: xhr.responseJSON,
                     error: error
-                }); // Расширенное логирование ошибки
+                });
                 alert('Error importing data: ' + (xhr.responseJSON ? xhr.responseJSON.detail : error));
             }
         });
