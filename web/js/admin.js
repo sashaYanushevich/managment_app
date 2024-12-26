@@ -277,23 +277,13 @@ $(document).ready(function() {
         const userId = $('#import-user-id').val();
         let importData = $('#import-data').val();
 
-        // Убедимся, что у нас есть данные
-        if (!importData.trim()) {
+        // Убираем проверку на пустые данные, так как она может неправильно работать с YAML
+        if (!importData) {
             alert('Please enter YAML data');
             return;
         }
 
-        // Очищаем данные от лишних пробелов и табуляций в начале строк, сохраняя отступы
-        importData = importData.split('\n')
-            .map(line => {
-                const trimmed = line.trimEnd(); // Удаляем только пробелы в конце
-                return trimmed;
-            })
-            .filter(line => line) // Удаляем пустые строки
-            .join('\n');
-
-        console.log('Sending data:', importData); // Для отладки
-
+        // Отправляем данные как есть, без дополнительной обработки
         $.ajax({
             url: `http://188.124.59.90:8000/api/v1/users/${userId}/import`,
             method: 'POST',
@@ -307,11 +297,11 @@ $(document).ready(function() {
             success: function(response) {
                 alert('Data imported successfully');
                 $('#import-modal').css('display', 'none');
-                $('#import-data').val(''); // Очищаем поле ввода
-                loadUsers(); // Обновляем список пользователей
+                $('#import-data').val('');
+                loadUsers();
             },
             error: function(xhr, status, error) {
-                console.error('Import error:', xhr.responseJSON); // Для отладки
+                console.error('Import error:', xhr.responseJSON);
                 alert('Error importing data: ' + (xhr.responseJSON ? xhr.responseJSON.detail : error));
             }
         });
