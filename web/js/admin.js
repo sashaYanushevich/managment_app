@@ -275,7 +275,7 @@ $(document).ready(function() {
         e.preventDefault();
 
         const userId = $('#import-user-id').val();
-        let importData = $('#import-data').val();
+        let importData = $('#import-data-textarea').val();
 
         console.log('Отправляемые данные:', importData);
 
