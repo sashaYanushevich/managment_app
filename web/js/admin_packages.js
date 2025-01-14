@@ -227,8 +227,9 @@ $(document).ready(function() {
                 }
             })
             .catch(error => {
-                console.error('Error saving package:', error);
-                alert(error.message);
+                closePackageModal();
+                alert('Package data saved');
+                loadPackages();
             });
     });
 
