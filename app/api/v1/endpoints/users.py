@@ -15,7 +15,8 @@ from app.core.send_mail import send_reset_password_email
 from app.db.session import get_db
 from app.core.security import get_password_hash
 from app.schemas.package import ImportData
-from app.external_api import external_api
+from app.core import external_api
+
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
