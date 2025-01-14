@@ -105,7 +105,13 @@ async def update_package(
     package = await repository.package.get(db, id=package_id)
     if not package:
         raise HTTPException(status_code=404, detail="Пакет не найден")
+    
+    # Ensure that the update operation is also async
     package = await repository.package.update(db, db_obj=package, obj_in=package_in)
+    
+    # Refresh the package to ensure all relationships are loaded
+    await db.refresh(package)
+    
     return package
 
 @router.delete("/{package_id}", response_model=schemas.Package)

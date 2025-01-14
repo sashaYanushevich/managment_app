@@ -15,6 +15,7 @@ from app.core.send_mail import send_reset_password_email
 from app.db.session import get_db
 from app.core.security import get_password_hash
 from app.schemas.package import ImportData
+from app.external_api import external_api
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -311,7 +312,21 @@ async def import_user_data(
                     machine_data=machine_data
                 )
                 
-                await repository.server.create(db, obj_in=server_create)
+                server = await repository.server.create(db, obj_in=server_create)
+                
+                # Create license for the server
+                license_data = await external_api.issue_license(
+                    date_expiry=package_create.expiry.strftime("%Y-%m-%d"),
+                    max_modems=server_create.max_modems,
+                    machine_data=server_create.machine_data,
+                    customer_id=package_create.customer_id,
+                    comment=server_create.name
+                )
+                
+                # Update server with license hash
+                server.license_hash = license_data.get("license_hash")
+                await db.commit()
+                
             except Exception as e:
                 await db.rollback()
                 raise HTTPException(
